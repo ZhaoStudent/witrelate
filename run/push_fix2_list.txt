@@ -1,0 +1,7 @@
+ceb37f140ecaf3ac0db4aeb7bc86059b  legal_acps/verdict.py
+fa57ef6659b705d8d5f50c214e55c7d6  legal_acps/evidence_hooks.py
+5ffc1bf9042cb2798c5b6366137d8ac7  legal_acps/video/frames.py
+ae18df502cee3004fbd621d5c236c88f  legal_acps/video/decode.py
+85d6fd8399f9ff474a777a3400c97cfd  legal_acps/video_modality.py
+955613b498891e358633687fa63e9fdf  legal_acps/check_local.py
+ccfe19865db0266659405a1910ab78cb  tools/verify_video.py

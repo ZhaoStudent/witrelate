@@ -1,0 +1,24 @@
+# 含密钥，绝不要提交
+.env
+*.pem
+*.key
+
+# 运行时产物
+.venv/
+__pycache__/
+*.pyc
+.wit/
+.wit-local/
+.wit-t/
+.wit-*/
+
+# 工具生成物（每次 `tools.tree_diff save` 都会改写）
+run/.tree_snapshot.json
+
+# 运行时产物（2026-10-16 补：上传仓库前核查发现未盖住）
+output/
+output_probes/
+logs/
+
+# WorkBuddy 工作区数据（自动化脚本/运行日志，非代码）
+.workbuddy/

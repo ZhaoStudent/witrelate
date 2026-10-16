@@ -1,0 +1,2 @@
+6d74c5d4864a8b19e1971b976678fa74  legal_acps/run_agent.py
+2a814aa81136a47bc77004114d147f9e  legal_acps/check_local.py

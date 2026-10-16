@@ -1,0 +1,11 @@
+/home/ubuntu/witrelate/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    # systemd 以 append: 方式持有文件句柄，必须 copytruncate 而不是 rename
+    copytruncate
+    su ubuntu ubuntu
+}

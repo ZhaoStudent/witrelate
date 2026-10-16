@@ -1,0 +1,75 @@
+ddfd2311922dfaa9b38563a7b02bbe6e  deploy/systemd/acps-debate-con.service
+59f6f323a5f29bc956c697b43761216e  deploy/systemd/acps-debate-pro.service
+90d66fabe32296af2a3452d8d81ffdc3  deploy/systemd/acps-fact-judge.service
+f8bd32319af9c0c89cf60db579caaa7e  deploy/systemd/acps-harm.service
+f56913eef31eee0d5840d5d6af868f4a  deploy/systemd/acps-incitement.service
+ffbcd14646fb575743901446a6e71ec6  deploy/systemd/acps-leader.service
+7d8b22b5a00e479c52ede0b08bbe5b62  docs/acps-account-and-certs.md
+5d39d48d6a57f43da3001524c1a2d2a0  docs/go-live.md
+e00cf6364ad7455371f5d2332ddf32ed  docs/leader-partner-role-exchange.md
+d589a86d57ba80ce68710a2fff9f1dca  docs/server-getting-started.md
+8bda1d734ac337bd16fcfb576c08b216  docs/上线操作手册.md
+5b38b0ad987e58ad80d690fbd7b0646f  docs/平台验证存证.md
+4e29fa7f59c7cac435cfa670e840543d  docs/项目设计提示词.md
+39015a34d60e07f91702aa75476d8e50  docs/验收报告.md
+51c1b0ed62dfe0ff396477f5bae44833  legal_acps/acps_config.py
+e424b10eef0d8ce780cab00c027e289a  legal_acps/agents.py
+077c9d2bfb50bc8847c314c689f480b4  legal_acps/check_local.py
+01bd31699df377b54280d78513886ff7  legal_acps/contracts.py
+c18b929cbae2f0d1793cd92b343e4b6c  legal_acps/debate.py
+562ab3a5758472bb64ae770ba79a6989  legal_acps/experience/__init__.py
+730dd3bad66e94970a052975c8513da9  legal_acps/experience/roles.py
+8867479125f8c369d1cbf015e927762f  legal_acps/experience/server.py
+18e625c1fb0a7146c9d920e6df6a557c  legal_acps/experience/session.py
+9743f4d1a8793fa3c1fd064f1c3f9b08  legal_acps/__init__.py
+c49ee10fe66a219766e0892012658fbe  legal_acps/llm.py
+f0d4f9103574351d14dce308fa4d184d  legal_acps/local_pipeline.py
+d7ca3001fe23689f803dce1d6707b293  legal_acps/run_agent.py
+5e8cc720e7fcaab91ddf414b532bee96  legal_acps/stub_model.py
+fdc1605c33a5138ce5e228db78c0d3cc  legal_acps/termination.py
+35d41efe083b52cc4a65d71206f3843a  legal_acps/wt_compat.py
+417d61c08e40f0e12155004362cfaac1  scripts/serve.sh
+fdca1533a0ebd8d061897eb831b51261  scripts/systemd-install.sh
+bad166320e314a2f1cf151f9b9f3174a  scripts/verify.sh
+a19cc62689e29245208da816b238d62c  tools/bootstrap_account.py
+142961f5daf2094856838654e85ba937  tools/check_backend.py
+2c581f1de81a4b49e5b5754950efd239  tools/check_discovery_pollution.py
+99ccba084e566165a7c576ac3bd4531d  tools/env_doctor.py
+492a860324ea5e42c1aaaf477bfc9fb7  tools/inspect_acs_model.py
+4c16795e2e0d808ec684a768dac086fb  tools/inspect_acs_tolerance.py
+04e49c85ef1a84172336129357ae4580  tools/inspect_openapi.py
+082c50c018069360864d61bc8b572a16  tools/inspect_visibility.py
+2cf17d8fdec941d9956d0efc34225cc3  tools/inspect_wt_spec.py
+43b6633d3a655f8beac1ce77dfcc5084  tools/list_agents.py
+343611565e43351ef82211dca9144ba5  tools/metrics.py
+81c61c4047dc13df5bbc3872dbddee47  tools/peek_creds.py
+5a5b45b392aa057990d22603e108edcc  tools/portal.py
+8485ea436549ba43dfc22e42a05e6ec9  tools/probe_acps.py
+8ffef448b54b4155e5ff44914d4ae3a4  tools/probe_discovery_delete_lag.py
+7ba0ca790e67fb3a5caf65a16d7e7d9a  tools/probe_registry_api.py
+dd0052c2c9b4be5e33dc358f048b36bd  tools/status.py
+9f26a533d272f8f43dda4e30350f1e13  tools/try_login.py
+2ba3c275d1793e5b23ce16023b871204  tools/try_login_raw.py
+c54d8693e5ec160c80c8faf31cff876e  tools/verify_experience.py
+87b3465bcfbf2f748ffec74e1d18e480  tools/verify_login.py
+0429bc5e629740c71b5fbeee639b1705  tools/verify_metrics.py
+4beff2d2feff0be819186447db8ce2bc  tools/verify_termination.py
+@@@@SUITE@@@@
+check_local_exit=0
+  [通过]  Agent 编译
+  [通过]  护栏（终止/熔断）
+  [通过]  嵌套结构
+  [通过]  协议声明
+  [通过]  脚本卫生
+  [通过]  ACS 草稿
+
+  本地层面全部就绪。这一步之后，能否真正互联只取决于：
+    1) .env 里的 ACPS_USERNAME / ACPS_PASSWORD 是否有效（已自助注册，见 ACCOUNT.txt）
+    2) Partner 是否有一个公网可达的 public_endpoint（裸 IP 即可）
+    3) 平台是否已人工审核通过（查：python -m tools.status）
+  证书不用管：wit 在 enroll() 时会自动向平台 CA 申请签发。
+verify_termination_exit=0
+verify_metrics_exit=0
+verify_experience_exit=0
+  · 未揭示的会话无法被判为结束，也无法被关闭 —— 教学闭环有硬保证
+  · 轮数上限、空输入、非法时序都被挡住

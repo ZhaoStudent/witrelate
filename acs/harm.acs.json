@@ -1,0 +1,80 @@
+{
+  "aic": "",
+  "active": false,
+  "lastModifiedTime": "2026-09-23T16:39:57+08:00",
+  "protocolVersion": "02.02",
+  "name": "社会危害性评估 Partner",
+  "description": "对已识别的言论综合评估社会危害性，输出 -100..100 的综合指数与六维分解（公共秩序、国家安全、群体针对、现实风险、传播潜力、表达正当性）。只做量化评估，不替代司法认定，不处理非言论类诉求。",
+  "version": "1.0.0",
+  "provider": {
+    "countryCode": "CN",
+    "organization": "BUPT-LegalAgent-Demo",
+    "department": "法律咨询多智能体课题组",
+    "name": "法律咨询多智能体课题组"
+  },
+  "securitySchemes": {
+    "mtls": {
+      "type": "mutualTLS",
+      "description": "ACPs 智能体间互信的双向 TLS 认证"
+    }
+  },
+  "endPoints": [
+    {
+      "url": "https://150.109.154.16:8444/rpc",
+      "transport": "JSONRPC",
+      "security": [
+        {
+          "mtls": []
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "notification": false,
+    "messageQueue": []
+  },
+  "defaultInputModes": [
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "harm.assess_social_impact",
+      "name": "assess_social_impact",
+      "description": "提交社会危害性评估结论。harm_index 是 -100..100 的整数：正数表示该言论有问题、不应支持，负数表示正当、应予支持。band 字段可以留空，系统会按 harm_index 自动补全。",
+      "version": "1.0.0",
+      "tags": [
+        "法律",
+        "危害评估",
+        "社会治理"
+      ],
+      "examples": [
+        "{\"text\": \"某群体都该滚出去，别让他们进厂。\", \"is_incitement\": true}",
+        "评估这段言论的社会危害程度，并给出分档结论。"
+      ],
+      "inputModes": [
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json"
+      ]
+    }
+  ],
+  "entityMeta": {
+    "kind": "test-agent",
+    "visibility": "private",
+    "purpose": "acps-demo-self-test",
+    "note": "仅本项目自测使用，不对外提供服务。"
+  },
+  "certificate": {
+    "altNames": {
+      "ip": [
+        "150.109.154.16"
+      ]
+    },
+    "requestedValidity": 365
+  }
+}

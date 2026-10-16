@@ -1,0 +1,39 @@
+[Unit]
+Description=ACPs Agent - debate-con (辩论反方 Partner, :8447)
+# 本地文档（systemd 的 file:// URL 不接受非 ASCII 路径，
+# 百分号编码也不行 —— % 在单元文件里是 specifier 转义符）：
+#   /home/ubuntu/witrelate/docs/上线操作手册.md
+Documentation=https://wt.ioa.pub/docs.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/witrelate
+
+Environment=HOME=/home/ubuntu
+Environment=PYTHONUNBUFFERED=1
+
+# 第五个角色：错开 48 秒。五个进程串行登录，间隔 12 秒。
+ExecStartPre=/bin/sleep 48
+
+ExecStart=/home/ubuntu/witrelate/.venv/bin/python -u -m legal_acps.run_agent debate-con
+
+Restart=always
+RestartSec=70
+TimeoutStopSec=25
+# 启动超时**必须显式给**：systemd 默认 `TimeoutStartSec=90s`，而本单元用来错开
+# 登录的 `ExecStartPre=/bin/sleep N` 也算在**启动**操作里。2026-10-04 实测：
+# sleep 96（evidence-audio）与 sleep 108（evidence-video）**永远起不来** ——
+# journalctl 报 `start-pre operation timed out`，叠加 `Restart=always` 就成了
+# 每 60 秒失败一次的死循环。180s 留余量（当前最大 108s）。详见手册 §8.4。
+TimeoutStartSec=180
+LimitNOFILE=65536
+
+StandardOutput=append:/home/ubuntu/witrelate/logs/debate-con.log
+StandardError=append:/home/ubuntu/witrelate/logs/debate-con.log
+
+[Install]
+WantedBy=multi-user.target

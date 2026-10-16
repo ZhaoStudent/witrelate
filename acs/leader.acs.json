@@ -1,0 +1,80 @@
+{
+  "aic": "",
+  "active": false,
+  "lastModifiedTime": "2026-09-23T16:39:57+08:00",
+  "protocolVersion": "02.02",
+  "name": "法律咨询主控",
+  "description": "受理待研判文本，协调煽动性识别与社会危害评估两个专家 Partner，汇总输出最终研判结论。只做协调与汇总，不自行替代专家完成专项判定；结论仅供研究参考，不构成正式法律意见。",
+  "version": "1.0.0",
+  "provider": {
+    "countryCode": "CN",
+    "organization": "BUPT-LegalAgent-Demo",
+    "department": "法律咨询多智能体课题组",
+    "name": "法律咨询多智能体课题组"
+  },
+  "securitySchemes": {
+    "mtls": {
+      "type": "mutualTLS",
+      "description": "ACPs 智能体间互信的双向 TLS 认证"
+    }
+  },
+  "endPoints": [
+    {
+      "url": "https://150.109.154.16:8445/rpc",
+      "transport": "JSONRPC",
+      "security": [
+        {
+          "mtls": []
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "notification": false,
+    "messageQueue": []
+  },
+  "defaultInputModes": [
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "legal.issue_verdict",
+      "name": "submit_final_verdict",
+      "description": "出具法律咨询研判结论，汇总煽动严重度、真伪度与社会危害指数，并附反方视角。结论会写入 output/ 目录下的 JSON 文件。",
+      "version": "1.0.0",
+      "tags": [
+        "法律",
+        "结论输出",
+        "多智能体协同"
+      ],
+      "examples": [
+        "{\"text\": \"最近治安这么差，还不都是那些外地来的打工的闹的。\"}",
+        "对这段文本给出完整的研判结论与危害分档。"
+      ],
+      "inputModes": [
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json"
+      ]
+    }
+  ],
+  "entityMeta": {
+    "kind": "test-agent",
+    "visibility": "private",
+    "purpose": "acps-demo-self-test",
+    "note": "仅本项目自测使用，不对外提供服务。"
+  },
+  "certificate": {
+    "altNames": {
+      "ip": [
+        "150.109.154.16"
+      ]
+    },
+    "requestedValidity": 365
+  }
+}

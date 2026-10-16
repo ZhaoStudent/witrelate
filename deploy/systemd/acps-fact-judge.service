@@ -1,0 +1,40 @@
+[Unit]
+Description=ACPs Agent - fact-judge (网络裁判 / 内层 Leader, :8448)
+# 本地文档（systemd 的 file:// URL 不接受非 ASCII 路径，
+# 百分号编码也不行 —— % 在单元文件里是 specifier 转义符）：
+#   /home/ubuntu/witrelate/docs/上线操作手册.md
+Documentation=https://wt.ioa.pub/docs.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/witrelate
+
+Environment=HOME=/home/ubuntu
+Environment=PYTHONUNBUFFERED=1
+
+# 第六个角色：错开 60 秒。前五个（0/12/24/36/48 秒）先完成 Registry 登录，
+# 否则并发登录会互相顶掉会话（详见 acps-harm.service 里的说明）。
+ExecStartPre=/bin/sleep 60
+
+ExecStart=/home/ubuntu/witrelate/.venv/bin/python -u -m legal_acps.run_agent fact-judge
+
+Restart=always
+RestartSec=60
+TimeoutStopSec=25
+# 启动超时**必须显式给**：systemd 默认 `TimeoutStartSec=90s`，而本单元用来错开
+# 登录的 `ExecStartPre=/bin/sleep N` 也算在**启动**操作里。2026-10-04 实测：
+# sleep 96（evidence-audio）与 sleep 108（evidence-video）**永远起不来** ——
+# journalctl 报 `start-pre operation timed out`，叠加 `Restart=always` 就成了
+# 每 60 秒失败一次的死循环。180s 留余量（当前最大 108s）。详见手册 §8.4。
+TimeoutStartSec=180
+LimitNOFILE=65536
+
+StandardOutput=append:/home/ubuntu/witrelate/logs/fact-judge.log
+StandardError=append:/home/ubuntu/witrelate/logs/fact-judge.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,16 @@
+6c09acdd099474ff6ae0f8ac6681fbae	docs/aicomp/项目复审与加分路线.md
+c0d2a035dbe64ef7905617982081312f	run/_matrix_video.py
+2a59de253812e1280e6cd948c706da4a	run/_probe_bugs.py
+d4278a47dd6c6517a49e7d27e67b7324	run/_probe_bugs2.py
+5067f4bf10bfc010a4df5d9801587bc4	run/_probe_invariants.py
+1b69a7246be0be13003a69372594a5d8	run/_probe_video.py
+1b8399993920d04d5e730321467caada	run/_probe_video2.py
+1ba7288077eafdee86cd576dae81598a	run/_probe_video3.py
+b4030e2e6219b19e766fd8d8c5898862	run/check_meta_residue.py
+744b965d8a9025069755f31def4bf4b7	run/e2e_video_live.py
+73620e86039e3394b71fccf070cad7c6	run/meta_verify_evidence.py
+9433ff9db7845d5e19cf3c6ae961f337	run/meta_verify_trace.py
+56c21dd5c6fa64f59fb092b1cc3f502c	run/probe_audio.py
+89128877cacd4f357e292174dba783da	tools/aip_sessions.py
+65da579a4b568a20dbf360e8c1f3cb1c	tools/trace.py
+78763ff9cd648a41f5b58834152e6d67	tools/verify_trace.py

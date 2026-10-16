@@ -1,0 +1,50 @@
+[Unit]
+Description=ACPs 真实案例定期研判（一次性；跑完即退，:8445 不再是它）
+# 本地文档（systemd 的 file:// URL 不接受非 ASCII 路径，百分号编码也不行 ——
+# % 在单元文件里是 specifier 转义符）：
+#   /home/ubuntu/witrelate/docs/上线操作手册.md
+Documentation=https://wt.ioa.pub/docs.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# ⚠️ **oneshot，不是 simple**：它跑一轮就退出，没有"服务在跑"这个状态。
+#    也因此它**不绑任何端口** —— 主控只在 `run_agent leader -i` 这条一次性路径上
+#    才不监听 8445（绑端口那件事只发生在没给 `--input` 的常驻分支里）。
+#    这条性质很重要：定时任务与常驻服务因此不会抢同一个端口。
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/witrelate
+
+Environment=HOME=/home/ubuntu
+Environment=PYTHONUNBUFFERED=1
+
+# ⚠️ 没有 `ExecStartPre=/bin/sleep N` —— 它**不需要**与别的单元错开启动：
+#    错开是为了避免"并发登录 Registry 把彼此会话顶掉"，而那是**开机时**的问题。
+#    本单元由定时器在 09:1x 触发，那时常驻服务早就起来了。
+#    取而代之的是**偏移闸门**（`case_round` 里的 OFFSET_MIN_S=180s）：动手之前先量
+#    一遍常驻服务的进程年龄，谁刚起来就**今天不跑**。用闸门而不是 sleep 的理由是：
+#    sleep 是猜的（它不知道服务起没起），闸门读的是**可观测事实**。
+ExecStart=/bin/bash /home/ubuntu/witrelate/scripts/case_round.sh
+
+# ⚠️ 启动超时**必须**大于 `case_round.ROUND_TIMEOUT_S`（900s），否则 systemd 会先
+#    动手把一整轮研判切断，而我们从日志里只会看到"服务启动超时"—— 一个完全不指向
+#    真因的措辞。1200s = 900s 的子进程上限 + 闸门/体检的余量。
+TimeoutStartSec=1200
+TimeoutStopSec=60
+LimitNOFILE=65536
+
+# ⚠️ **退出码 2 = 没跑（被闸门拦下）**，它**不是**失败 —— 但也不许被当成"通过"：
+#    真相在 `case_rounds.jsonl` 的 `outcome` 字段与日志里（会打印 `**跳过**（没跑）`
+#    与具体原因）。把它声明成成功只是不让单元长期变红（本项目纪律：永远在响的警报
+#    = 没有警报）；1（体检未过）与 3（环境性问题）**照旧算失败**，必须有人看。
+SuccessExitStatus=0 2
+
+StandardOutput=append:/home/ubuntu/witrelate/logs/case-round.log
+StandardError=append:/home/ubuntu/witrelate/logs/case-round.log
+
+# ⚠️ **刻意不写 `[Install]`**：排期归 `acps-case-round.timer` 管。
+#    写了 `WantedBy=multi-user.target` 就有可能被 `systemctl enable` 成"开机跑一轮"，
+#    而**开机正是常驻服务刚起来的时候** —— 那是偏移闸门要拦的时刻，也是"登录 Registry
+#    顶掉别人会话"风险最高的时刻。少一个可以被误用的入口，就少一次事故。

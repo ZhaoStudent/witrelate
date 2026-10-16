@@ -1,0 +1,38 @@
+[Unit]
+Description=ACPs Agent - law-advisor (法律咨询顾问 Partner, :8453)
+# 本地文档（systemd 的 file:// URL 不接受非 ASCII 路径，
+# 百分号编码也不行 —— % 在单元文件里是 specifier 转义符）：
+#   /home/ubuntu/witrelate/docs/上线操作手册.md
+Documentation=https://wt.ioa.pub/docs.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/witrelate
+
+Environment=HOME=/home/ubuntu
+Environment=PYTHONUNBUFFERED=1
+
+# 第十一个角色：继续按 12 秒一档错峰（前十个 0/12/…/108 秒）。
+# 并发登录 Registry 会互相顶掉会话（详见 acps-harm.service 里的说明）。
+ExecStartPre=/bin/sleep 120
+
+ExecStart=/home/ubuntu/witrelate/.venv/bin/python -u -m legal_acps.run_agent law-advisor
+
+Restart=always
+RestartSec=60
+TimeoutStopSec=25
+# 启动超时**必须显式给**（120s 的错峰 sleep 也算在启动里）：
+# 2026-10-04 实测 sleep 96/108 曾因默认 90s 起不来（详见 acps-debate-pro.service
+# 与手册 §8.4）。180s 留余量。
+TimeoutStartSec=180
+LimitNOFILE=65536
+
+StandardOutput=append:/home/ubuntu/witrelate/logs/law-advisor.log
+StandardError=append:/home/ubuntu/witrelate/logs/law-advisor.log
+
+[Install]
+WantedBy=multi-user.target

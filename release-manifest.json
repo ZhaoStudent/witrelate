@@ -1,0 +1,26 @@
+{
+  "artifacts": {
+    "acpsSdk": {
+      "filename": "acps_sdk-2.2.0-py3-none-any.whl",
+      "sha256": "3bad5c3669319209db868411ca73ae7622bd98c7e17ccd9e06cb5910a35ec822",
+      "version": "2.2.0"
+    },
+    "wit": {
+      "filename": "wit_framework-2.1.0-cp312.cp313.cp314-none-any.whl",
+      "sha256": "21720d2401a380484fa6c4dd0b4bf5ccba9a1157b597365dbf263f174e52efaa",
+      "version": "2.1.0"
+    }
+  },
+  "evidenceTime": "2026-09-09T02:19:25Z",
+  "pythonRequires": ">=3.12,<3.15",
+  "releaseKind": "public-release",
+  "schemaVersion": 1,
+  "sources": {
+    "acpsCommunityCommit": "aca927369dde32426abc54f04e0293e031612cdd",
+    "witCommit": "40e6f22b150737e5da82f503a2ffee68b8bf47e9",
+    "witPatchSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "witSourceTreeSha256": "e40bedc6a363ce910e9045b1c8b158a8a7cc07ea461e4495a290a1f1a8f3b58b",
+    "witTreeState": "clean",
+    "witUntrackedInventorySha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

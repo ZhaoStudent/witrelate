@@ -1,0 +1,47 @@
+[Unit]
+Description=ACPs Agent - evidence-audio (音频鉴伪 Partner, :8451)
+# 本地文档（systemd 的 file:// URL 不接受非 ASCII 路径，
+# 百分号编码也不行 —— % 在单元文件里是 specifier 转义符）：
+#   /home/ubuntu/witrelate/docs/上线操作手册.md
+Documentation=https://wt.ioa.pub/docs.html
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/witrelate
+
+Environment=HOME=/home/ubuntu
+Environment=PYTHONUNBUFFERED=1
+
+# 第九个角色：错开 96 秒。前面的角色先完成 Registry 登录，
+# 否则并发登录会互相顶掉会话（详见 acps-harm.service 里的说明）。
+# ⚠️ 各单元延迟**两两不同**这件事由 `check_local` 的 3b 断言把守 ——
+#    别随手改成重复值（那是"看起来只是启动慢一点"的静默故障）。
+#
+# ⚠️ 本角色**只依赖 numpy**（不加 ffmpeg / sox / librosa）：
+#    那三样服务器上都没有，而本能力的"解不出波形就如实弃权"正是为此设计的。
+#    要给它加解码能力时，必须同步改 `legal_acps/audio/decode.py` 里的说明，
+#    否则文档会变成一句过期的承诺。
+ExecStartPre=/bin/sleep 96
+
+ExecStart=/home/ubuntu/witrelate/.venv/bin/python -u -m legal_acps.run_agent evidence-audio
+
+Restart=always
+RestartSec=60
+TimeoutStopSec=25
+# 启动超时**必须显式给**：systemd 默认 `TimeoutStartSec=90s`，而本单元用来错开
+# 登录的 `ExecStartPre=/bin/sleep N` 也算在**启动**操作里。2026-10-04 实测：
+# sleep 96（evidence-audio）与 sleep 108（evidence-video）**永远起不来** ——
+# journalctl 报 `start-pre operation timed out`，叠加 `Restart=always` 就成了
+# 每 60 秒失败一次的死循环。180s 留余量（当前最大 108s）。详见手册 §8.4。
+TimeoutStartSec=180
+LimitNOFILE=65536
+
+StandardOutput=append:/home/ubuntu/witrelate/logs/evidence-audio.log
+StandardError=append:/home/ubuntu/witrelate/logs/evidence-audio.log
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,37 @@
+[Unit]
+Description=定时触发「真实案例定期研判」（每天一轮）
+# 本地文档（systemd 的 file:// URL 不接受非 ASCII 路径，百分号编码也不行）：
+#   /home/ubuntu/witrelate/docs/上线操作手册.md
+Documentation=https://wt.ioa.pub/docs.html
+
+[Timer]
+# ⚠️ 时刻是**挑过的**，不是为了好看：
+#
+#   1. 远离 logrotate。`deploy/systemd/acps.logrotate` 是 `daily` +
+#      `copytruncate`（原地截断），由系统自带的 logrotate.timer 在**午夜前后**触发。
+#      而 `case_round` 的"凭据体检"靠**只读日志增量**来判定，日志一旦在那一轮里被
+#      截断，它就如实报「无法判定（不是「干净」）」—— 判据没坏，是排班撞上了。
+#      09:17 离午夜足够远。
+#   2. 用 :17 而不是 :00/:30：整点是 `cron.daily`、`logrotate`、各种备份任务
+#      扎堆的时刻，避开它们省得互相等锁。
+#   3. 远离开机。常驻服务的启动错开最大 108s、再叠一次 Registry 登录；
+#      `RandomizedDelaySec=600` 之外还有**偏移闸门**（进程年龄 < 180s ⇒ 今天不跑）
+#      兜底。两道一起用，是因为闸门读的是事实、而排班是"我以为"。
+OnCalendar=*-*-* 09:17:00
+RandomizedDelaySec=600
+AccuracySec=1min
+
+# ⚠️ `Persistent=true` 会**补跑**错过的时刻（关机/重启导致没跑成时会尽快补一次）。
+#    要紧的是它补跑的时刻**往往紧跟在开机之后** —— 那正是偏移闸门要拦的窗口。
+#    ⇒ 补跑大概率被拦成 `outcome=skipped`（退出码 2，单元不会变红），当天就少一轮。
+#      这是**有意的取舍**：宁可今天少一次访问，也不去顶常驻服务的 Registry 会话
+#      （"声明在线却连不上"比"没起服务"更糟）。要立刻补，手工跑
+#      `bash scripts/case_round.sh`（服务已就绪时它会正常放行）。
+Persistent=true
+
+# ⚠️ `Unit=` 其实可以省略（同名单元是默认值）。**写出来**是为了让"这个定时器拉的是
+#    哪一个单元"一眼可见 —— 默认值这种东西，读的人往往不知道它存在。
+Unit=acps-case-round.service
+
+[Install]
+WantedBy=timers.target

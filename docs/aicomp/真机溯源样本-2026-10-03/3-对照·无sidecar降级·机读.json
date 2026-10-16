@@ -1,0 +1,273 @@
+{
+  "schema": "legal-acps/trace@1",
+  "generated_at": "2026-10-03T20:52:01+08:00",
+  "source_files": [
+    ".wit/incitement/acps/aip-tasks.sqlite3",
+    ".wit/harm/acps/aip-tasks.sqlite3",
+    ".wit/leader/acps/aip-tasks.sqlite3",
+    ".wit/debate-pro/acps/aip-tasks.sqlite3",
+    ".wit/debate-con/acps/aip-tasks.sqlite3",
+    ".wit/fact-judge/acps/aip-tasks.sqlite3"
+  ],
+  "run": {
+    "session_id": "session-6ccfca55-ecd3-4ff1-8106-c285c8624158",
+    "verdict_file": "/home/ubuntu/witrelate/output/verdict-20261003T080645Z.json",
+    "subject": "网传某学校食堂使用过期食材，学生堵门讨要说法，据称后厨画面是上周拍摄的。",
+    "started_at": "2026-10-03T08:03:26.195041+00:00",
+    "finished_at": "2026-10-03T08:06:36.248958+00:00",
+    "wall_ms": 190054,
+    "resolution": "inferred",
+    "basis": "verdict 时刻 2026-10-03T08:06:45+00:00 落在 leader 的平台会话窗口内（容差 0s）"
+  },
+  "hops": [
+    {
+      "seq": 1,
+      "depth": 0,
+      "from": {
+        "role": "leader",
+        "aic": "1.2.156.3088.1.BUPT.81M3FX.X1J5R5.HKBBAM.018M"
+      },
+      "to": {
+        "role": "fact-judge",
+        "aic": "1.2.156.3088.1.BUPT.81M3FX.83WI6B.TF6QRX.0E91"
+      },
+      "task_ref": "task_f80e92e5eddb",
+      "task_id": "task-fc749978-2a92-4e0a-9bbb-e425ee707298",
+      "session_id": "session-6ccfca55-ecd3-4ff1-8106-c285c8624158",
+      "state": "working",
+      "sent_at": "2026-10-03T08:03:26.195041+00:00",
+      "last_event_at": "2026-10-03T08:06:36.248958+00:00",
+      "latency_ms": 190054,
+      "request_excerpt": "请对以下网传信息受理事实核查并组织正反双方辩论，出具裁定书：网传某学校食堂使用过期食材，学生堵门讨要说法，据称后厨画面是上周拍摄的。",
+      "product_ids": [],
+      "events": 41,
+      "health": "pending",
+      "pairing": "hard",
+      "parent_task_ref": ""
+    },
+    {
+      "seq": 2,
+      "depth": 1,
+      "from": {
+        "role": "fact-judge",
+        "aic": "1.2.156.3088.1.BUPT.81M3FX.83WI6B.TF6QRX.0E91"
+      },
+      "to": {
+        "role": "debate-pro",
+        "aic": "1.2.156.3088.1.BUPT.81M3FX.DW98RD.00EKPX.0R13"
+      },
+      "task_ref": "task_748c2737b90e",
+      "task_id": "task-1cbbf5f6-3729-4835-9224-ef90a9a2e4cd",
+      "session_id": "session-bf5fc90b-6297-4009-a2b9-b6ce5584b6be",
+      "state": "awaiting-completion",
+      "sent_at": "2026-10-03T08:04:00.417318+00:00",
+      "last_event_at": "2026-10-03T08:04:34.865430+00:00",
+      "latency_ms": 34448,
+      "request_excerpt": "你是本场事实核查辩论的【正方】，请提交第 1 轮论证（round=1）。 【待裁定命题】某学校食堂使用过期食材，学生堵门讨要说法，且网传后厨画面摄于本次事件发生期间（而非上周旧画面）。 【你的立场（正方）】该学校食堂确存在使用过期食材的行为，学生堵门讨要说法的画面真实反映了本次事件，网传后厨画面为当次事件实拍。 【可核验事实清单】 1. 网传信息原始表述（来源不明）：「网传某学校食堂使用过期食材…",
+      "product_ids": [
+        "product-task-1cbbf5f6-3729-4835-9224-ef90a9a2e4cd"
+      ],
+      "events": 9,
+      "health": "slow",
+      "pairing": "hard",
+      "parent_task_ref": "task_f80e92e5eddb"
+    },
+    {
+      "seq": 3,
+      "depth": 1,
+      "from": {
+        "role": "fact-judge",
+        "aic": "1.2.156.3088.1.BUPT.81M3FX.83WI6B.TF6QRX.0E91"
+      },
+      "to": {
+        "role": "debate-con",
+        "aic": "1.2.156.3088.1.BUPT.81M3FX.2UZTZC.HNNIJ0.0OCF"
+      },
+      "task_ref": "task_7c54df0afc8f",
+      "task_id": "task-8760467e-0cc1-45a2-9e6f-3f86518abccb",
+      "session_id": "session-bf5fc90b-6297-4009-a2b9-b6ce5584b6be",
+      "state": "awaiting-completion",
+      "sent_at": "2026-10-03T08:04:42.957283+00:00",
+      "last_event_at": "2026-10-03T08:05:25.256894+00:00",
+      "latency_ms": 42300,
+      "request_excerpt": "你是本场事实核查辩论的【反方】，请提交第 1 轮反驳（round=1）。 【待裁定命题】某学校食堂使用过期食材，学生堵门讨要说法，且网传后厨画面摄于本次事件发生期间（而非上周旧画面）。 【你的立场（反方）】网传信息无法证实食堂使用过期食材；后厨画面为上周旧画面（时间错配），学生堵门与过期食材之间无经核实的因果关系。 【可核验事实清单】 1. 网传信息原始表述（来源不明）：「网传某学校食堂使用过期…",
+      "product_ids": [
+        "product-task-8760467e-0cc1-45a2-9e6f-3f86518abccb"
+      ],
+      "events": 10,
+      "health": "slow",
+      "pairing": "hard",
+      "parent_task_ref": "task_f80e92e5eddb"
+    }
+  ],
+  "chain_edges": [
+    {
+      "from_task_ref": "task_f80e92e5eddb",
+      "to_session_id": "session-bf5fc90b-6297-4009-a2b9-b6ce5584b6be",
+      "relation": "parent-child",
+      "evidence": "inferred",
+      "why": "fact-judge 的该会话起止时间落在 task_f80e92e5eddb 的生命周期 [2026-10-03T08:03:26.195065+00:00 .. 2026-10-03T08:06:36.256543+00:00] 之内；跨层无协议级硬键（外层 session ≠ 内层 session，实测）",
+      "ambiguous": false
+    }
+  ],
+  "verdict_fields": [
+    {
+      "field": "subject",
+      "value": "网传某学校食堂使用过期食材，学生堵门讨要说法，据称后厨画面是上周拍摄的。",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "harm_index",
+      "value": "20",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "band",
+      "value": "低风险",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "is_incitement",
+      "value": "False",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "truth_score",
+      "value": "40",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "consistency_note",
+      "value": "自主研判：1) is_incitement=false——原文\"网传……据称……\"仅为转述，无号召行为、无指向性攻击动…",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "conclusion",
+      "value": "这段言论是对一起校园食品安全事件的转述，属于未经证实的传闻：其中\"食堂使用过期食材\"\"学生堵门讨要说法\"\"后厨画面是上…",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "action_advice",
+      "value": "属未经证实的传闻范畴，建议平台进一步核查信息来源与原始画面；在核实前不宜转发扩散，也不宜据此直接下结论。",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    },
+    {
+      "field": "disclaimer",
+      "value": "本结论由人工智能辅助生成，仅供法律学习与研究参考，不构成法律意见，不能替代律师或司法机关的认定。",
+      "source": {
+        "kind": "leader_synthesis",
+        "based_on": [
+          "task_748c2737b90e",
+          "task_7c54df0afc8f"
+        ],
+        "note": "该字段名未出现在任何下游产物的内容里（按词边界匹配，不含产物外壳 id/name） ⇒ 由主控自己综合得出"
+      },
+      "evidence": "derived"
+    }
+  ],
+  "gaps": [
+    {
+      "field": "subject",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "harm_index",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "band",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "is_incitement",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "truth_score",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "consistency_note",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "conclusion",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "action_advice",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    },
+    {
+      "field": "disclaimer",
+      "reason": "链上没有任何下游产物的内容包含该字段名（按词边界匹配，不含产物外壳 id/name）（本局共 2 跳返回了产物）"
+    }
+  ],
+  "warnings": [
+    "缺少 sidecar（verdict-20261003T080645Z.meta.json 不存在）⇒ 按 verdict 时刻在 leader 的平台会话表里认领到 …c285c8624158（owner=…R5.HKBBAM.018M）；容差 0s。本表把 verdict 归到哪一局靠推断，不是 sidecar 的协议级握手 —— 请核对后再引用。"
+  ]
+}

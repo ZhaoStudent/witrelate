@@ -1,0 +1,99 @@
+{
+  "aic": "",
+  "active": false,
+  "lastModifiedTime": "2026-09-23T16:39:57+08:00",
+  "protocolVersion": "02.02",
+  "name": "煽动性言论识别 Partner",
+  "description": "识别公开传播文本中的煽动性成分，并拆解其中的事实性断言逐条判定真伪。只对给定文本做分析与打分，不提供法律意见、不代理诉讼、不处理私人纠纷，也不对言论发布者作人格评价。",
+  "version": "1.0.0",
+  "provider": {
+    "countryCode": "CN",
+    "organization": "BUPT-LegalAgent-Demo",
+    "department": "法律咨询多智能体课题组",
+    "name": "法律咨询多智能体课题组"
+  },
+  "securitySchemes": {
+    "mtls": {
+      "type": "mutualTLS",
+      "description": "ACPs 智能体间互信的双向 TLS 认证"
+    }
+  },
+  "endPoints": [
+    {
+      "url": "https://150.109.154.16:8443/rpc",
+      "transport": "JSONRPC",
+      "security": [
+        {
+          "mtls": []
+        }
+      ]
+    }
+  ],
+  "capabilities": {
+    "streaming": false,
+    "notification": false,
+    "messageQueue": []
+  },
+  "defaultInputModes": [
+    "application/json"
+  ],
+  "defaultOutputModes": [
+    "application/json"
+  ],
+  "skills": [
+    {
+      "id": "speech.detect_incitement",
+      "name": "report_incitement",
+      "description": "判定文本是否构成煽动性言论，给出适用范围、强度与针对对象，并以结构化结论回传。evidence_spans 必须逐字摘录原文，不得改写或概括。",
+      "version": "1.0.0",
+      "tags": [
+        "法律",
+        "言论分析",
+        "煽动性识别"
+      ],
+      "examples": [
+        "{\"text\": \"最近治安这么差，还不都是那些外地来的打工的闹的，他们都该滚出去。\"}",
+        "帮我判断这段话有没有煽动性：某某群体就不该出现在这个城市。"
+      ],
+      "inputModes": [
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json"
+      ]
+    },
+    {
+      "id": "facts.verify_claims",
+      "name": "report_claims",
+      "description": "拆解文本中的事实性断言并逐条判定真伪，给出整体为真程度（0..100）。纯情绪表达不必拆条，此时 claims 可为空并说明原因。",
+      "version": "1.0.0",
+      "tags": [
+        "法律",
+        "事实核查"
+      ],
+      "examples": [
+        "这段话里哪些是事实陈述、哪些是情绪表达？事实部分可信度如何？"
+      ],
+      "inputModes": [
+        "application/json"
+      ],
+      "outputModes": [
+        "application/json"
+      ]
+    }
+  ],
+  "entityMeta": {
+    "kind": "test-agent",
+    "visibility": "private",
+    "purpose": "acps-demo-self-test",
+    "note": "仅本项目自测使用，不对外提供服务。"
+  },
+  "certificate": {
+    "altNames": {
+      "ip": [
+        "150.109.154.16"
+      ]
+    },
+    "requestedValidity": 365
+  }
+}

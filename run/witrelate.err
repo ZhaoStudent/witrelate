@@ -1,0 +1,13 @@
+md5sum: docs/aicomp/第二阶段方案评价与设计.md: No such file or directory
+md5sum: legal_acps/experience/opening.py: No such file or directory
+md5sum: legal_acps/experience/tool_scope.py: No such file or directory
+md5sum: run/_probe_discovery_netjudge.py: No such file or directory
+md5sum: run/meta_verify_fallacy_layers.py: No such file or directory
+md5sum: run/meta_verify_frontend_flow.py: No such file or directory
+md5sum: run/meta_verify_opening.py: No such file or directory
+md5sum: run/meta_verify_sync_manifest.py: No such file or directory
+md5sum: run/meta_verify_tool_scope.py: No such file or directory
+md5sum: run/probe_token_budget.py: No such file or directory
+md5sum: run/rehearse_experience.py: No such file or directory
+md5sum: run/verify_frontend_flow.mjs: No such file or directory
+md5sum: tools/acs_fingerprint.py: No such file or directory

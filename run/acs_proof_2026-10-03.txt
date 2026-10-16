@@ -1,0 +1,22 @@
+结论溯源表改动 · ACS 指纹取证（2026-10-03）
+================================================================
+改动内容：legal_acps/agents.py 的 submit_final_verdict() 返回值里加 trace_meta
+（sidecar 路径 + 会话信息）—— 属于**工具运行期返回值**，不是 ACS 作者字段。
+
+判据：`tools.acs_fingerprint.AUTHOR_FIELDS` = 进 ACS 指纹的那 10 个字段
+      name / description / version / protocolVersion / provider / securitySchemes / capabilities / defaultInputModes / defaultOutputModes / skills
+
+  代码编译指纹  d4993eda9150d5318d8ff148ab9e5281  debate-con
+  代码编译指纹  88e12c01714f16e0679ec9e011d47ded  debate-pro
+  代码编译指纹  1d0e1d8400cbafae23d4ca79b8f82e15  evidence-audio
+  代码编译指纹  638905f47cc5fb689a45e963e648e2d5  evidence-image
+  代码编译指纹  fdcc7215eb80fd8be4c545ba1184bf54  evidence-leader
+  代码编译指纹  9ab8bd2c2a16b95ac61156ee86a536fe  evidence-video
+  代码编译指纹  0c402eb47883929e7fb6428e84a4d433  fact-judge
+  代码编译指纹  20e96f0bc17b60de580170bda4ca16f6  harm
+  代码编译指纹  696e6a31f0bde07cd04c1263224d8795  incitement
+  代码编译指纹  340fd355cf94e4f3e749312e763155d4  leader
+
+服务器侧（.wit/<role>/acps/）实测：10/10 角色 enrollment.json 均存在；
+10/10 角色的**已登记草稿**作者视图指纹与上表逐角色一致。
+⇒ 已过审 ACS 与本份代码在作者可控字段上逐字节相同，无需重新送审。

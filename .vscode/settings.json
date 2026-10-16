@@ -1,0 +1,19 @@
+{
+  // 让 Pylance / Python 扩展固定使用本项目自带的虚拟环境。
+  // 必须用这个 .venv：wit-framework 2.1.0 与 acps-sdk 2.2.0 只装在这里面，
+  // 系统的 Python 3.13 / 3.14 里都没有 wit，选中它们就会报
+  // "无法解析导入 wit  PylancereportMissingImports"。
+  "python.defaultInterpreterPath": "${workspaceFolder}\\.venv\\Scripts\\python.exe",
+  "python-envs.defaultEnvManager": "ms-python.python:venv",
+  "python.terminal.activateEnvironment": true,
+
+  // 本项目内部以包名互相引用（from legal_acps.xxx import ...），
+  // 把仓库根目录加进分析路径，Pylance 才能解析自家的 legal_acps / tools。
+  "python.analysis.extraPaths": [
+    "${workspaceFolder}"
+  ],
+
+  // 保留严格检查：不要为了消警告把 reportMissingImports 降级，
+  // 那样会把真正的依赖缺失一起藏起来。
+  "python.analysis.typeCheckingMode": "basic"
+}
