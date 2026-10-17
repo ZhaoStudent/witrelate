@@ -93,7 +93,11 @@ def main() -> int:
     load_env(ROOT / ".env")
 
     print("=" * 70)
-    print(f"  批量立场对调实验 · {datetime.now(timezone.utc).isoformat(timespec='seconds')}")
+    # 🔴 批量起点在**这里**取（主流程第一行），阶段 3 的时间过滤以它为基准。
+    #    首版把基准取在跑完之后 ⇒ 只收到最后一个事件的记录（12 跑 1 收，
+    #    2026-10-18 实测教训：过滤基准必须锚定「本轮从什么时候开始」）。
+    batch_start = datetime.now(timezone.utc)
+    print(f"  批量立场对调实验 · {batch_start.isoformat(timespec='seconds')}")
     print("=" * 70)
 
     # ── 阶段 0：停服前逐事件预检（命中者在停服前就被筛掉）─────────
@@ -155,14 +159,16 @@ def main() -> int:
             rec = json.loads(ej.read_text(encoding="utf-8"))
         except Exception:  # noqa: BLE001
             continue
-        # 只收本轮的：experiment stamp 不早于批量启动前 5 分钟（容忍时钟毛刺）
+        # 只收本轮的：experiment stamp 不早于批量起点前 5 分钟（容忍时钟毛刺）。
+        # 🔴 基准是 batch_start（main 第一行取的），不是「现在」——首版用
+        #    跑完后的当前时间做基准，把除最后一个事件外的记录全滤掉了。
         try:
             rec_time = datetime.strptime(rec.get("stamp", ""),
                                          "%Y%m%dT%H%M%SZ").replace(
                                              tzinfo=timezone.utc)
         except ValueError:
             continue
-        if rec_time < stamp_now - timedelta(minutes=5):
+        if rec_time < batch_start - timedelta(minutes=5):
             continue
         valid.append(rec)
 
