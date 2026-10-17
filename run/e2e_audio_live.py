@@ -75,6 +75,8 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
+import subprocess
 from pathlib import Path
 
 from dotenv_lite import load_env
@@ -118,6 +120,14 @@ AUDIO_SECONDS = 3.0
 #: 主控 → 鉴证 Leader → 音频鉴伪。**逐跳**都要查收件箱，少一跳这条判据就退化成
 #: "只证明主控自己收到了附件"（而链断在下游时它照样全绿）。
 HOPS = ("leader", "evidence-leader", "evidence-audio")
+
+#: #125 跨机部署后，第三跳（evidence-audio）常驻在第二台机器上。设
+#: ``E2E_AUDIO_LEAF_REMOTE=<ssh目标>``（如 ubuntu@101.33.124.181）后，A′ 的
+#: 第三本收件箱改经 ssh 用**同一份** `landed_at()` 在远端核对（助手
+#: ``run/remote_inbox_probe.py``，两台代码同源）；不设则查本地旧目录——
+#: 迁移后的已知假红（旧文件 staged_at 不变），两本地跳仍然有效。
+REMOTE_LEAF_SSH = os.environ.get("E2E_AUDIO_LEAF_REMOTE", "").strip()
+REMOTE_HOPS = ("evidence-audio",) if REMOTE_LEAF_SSH else ()
 
 
 def markers() -> tuple[str, ...]:
@@ -204,6 +214,30 @@ def _box_of(role: str) -> Path:
     return inbox_root(Path(f".wit/{role}"))
 
 
+def _landed_at_for(role: str, handle: str) -> str:
+    """A′ 的逐跳落盘核对入口：本地跳直接查盘；远端跳经 ssh 查**同一份**判据。
+
+    远端失败（ssh 不通 / 远端脚本报错）如实返回空串 ——「查不到」不许被
+    静默当成「通过」，由 landed_inboxes 的三态逻辑当「不在」报红并带原因。
+    handle 是 sha256 十六进制、role 来自本模块常量 ⇒ 无注入面。
+    """
+    if role in REMOTE_HOPS:
+        try:
+            cp = subprocess.run(
+                ["ssh", "-o", "BatchMode=yes", REMOTE_LEAF_SSH,
+                 "cd ~/witrelate && ./.venv/bin/python -m "
+                 f"run.remote_inbox_probe {role} {handle}"],
+                capture_output=True, text=True, timeout=45,
+            )
+        except subprocess.TimeoutExpired:
+            return ""
+        if cp.returncode != 0:
+            return ""
+        lines = [ln for ln in (cp.stdout or "").splitlines() if ln.strip()]
+        return lines[-1].strip() if lines else ""
+    return landed_at(handle, root=_box_of(role))
+
+
 def landed_snapshot(handle: str) -> dict[str, str]:
     """**跑之前**的落盘时间快照：每本收件箱 → 那份字节的 `staged_at`（不在则空串）。
 
@@ -211,7 +245,7 @@ def landed_snapshot(handle: str) -> dict[str, str]:
         这件事只能靠**前后对比**证明：样本是确定性合成的，字节每轮都一样，
         光看「在不在」分不出是这一轮落的还是上一轮留下的。
     """
-    return {role: landed_at(handle, root=_box_of(role)) for role in HOPS}
+    return {role: _landed_at_for(role, handle) for role in HOPS}
 
 
 def landed_inboxes(handle: str, before: dict[str, str]) -> list[tuple[str, bool, str]]:
@@ -228,7 +262,7 @@ def landed_inboxes(handle: str, before: dict[str, str]) -> list[tuple[str, bool,
     """
     out: list[tuple[str, bool, str]] = []
     for role in HOPS:
-        now_at = landed_at(handle, root=_box_of(role))
+        now_at = _landed_at_for(role, handle)
         was = before.get(role, "")
         if not now_at:
             out.append((role, False, "这份字节不在（或元数据对不上）"))
@@ -375,6 +409,10 @@ async def main() -> int:
     #    和「上一轮留下的」。（纪律：比对类判据必须先单独断言「基线存在」，
     #    否则「没得比」与「不一样」在输出里长得一模一样。）
     before_hops = landed_snapshot(handle)
+    if not REMOTE_LEAF_SSH:
+        print("  [A′·注] 未设 E2E_AUDIO_LEAF_REMOTE —— 第三跳（evidence-audio，"
+              "已在第二台机器）将查本地旧目录，跨机部署后**必报已知假红**；"
+              "设该变量可启用远端核对（两本地跳不受影响）")
     print(
         f"  [基线] 跑之前每本收件箱里那份字节的落盘时间："
         f"{ {r: (v or '无') for r, v in before_hops.items()} }"
