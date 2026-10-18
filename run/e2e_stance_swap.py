@@ -348,20 +348,37 @@ def check_swap_in_payloads(text_pro: str, text_con: str,
 
 def fanout_problems(rows: list[dict], aic_map: dict[str, str],
                     tag: str) -> list[str]:
-    """R1b / R2b 的扇出判据（两条委派、正反各一、时间差毫秒级）。"""
+    """R1b / R2·扇出的判据（2026-10-18 追问轮起放宽为 2–4 条）。
+
+    裁判定向追问（`termination._maybe_followup`，fact-judge 装配
+    followup_rounds=1）上线后，辩手委派总数不再是恒 2：
+      · **首波**（时间序前 2 条）必须仍是正反各一、时间差毫秒级 ——
+        并发扇出不许被追问功能顺手退化；
+      · 追加委派（第 3–4 条，若有）是**追问轮**：目标仍只能是辩手；
+        时间上本来就在辩论回齐之后，**不计时间窗**。
+    rows 顺序 = 任务库 rowid 递增 = 委派创建顺序（new_delegations 单一来源）。
+    """
     problems: list[str] = []
+    print(f"[{tag}] 辩手委派 {len(rows)} 条")
+    if not 2 <= len(rows) <= 4:
+        problems.append(f"{tag} 辩手委派 {len(rows)} 条（应为 2–4："
+                        "2=无追问，3–4=追问轮）—— 扇出/链路出问题")
+        return problems
+    first_roles = [aic_map.get(str(r.get("remote_aic"))) for r in rows[:2]]
+    extra_roles = [aic_map.get(str(r.get("remote_aic"))) for r in rows[2:]]
+    if set(first_roles) != {"debate-pro", "debate-con"}:
+        problems.append(f"{tag} 首波两条委派不是正反各一：{first_roles}")
+        return problems
+    if any(r not in ("debate-pro", "debate-con") for r in extra_roles):
+        problems.append(f"{tag} 追问轮委派竟派给了非辩手：{extra_roles}")
     gap = fanout_gap_seconds(rows)
-    print(f"[{tag}] 辩手委派 {len(rows)} 条  时间差={gap}")
-    roles_hit = {aic_map.get(str(r.get("remote_aic"))) for r in rows}
-    if len(rows) != 2:
-        problems.append(f"{tag} 辩手委派 {len(rows)} 条（应为 2）—— "
-                        "扇出/链路出问题")
-    elif roles_hit != {"debate-pro", "debate-con"}:
-        problems.append(f"{tag} 两条委派不是正反各一：{sorted(roles_hit)}")
-    elif gap is None:
-        problems.append(f"{tag} 时间差未判定（created_at 解析不了）—— 跳过 ≠ 通过")
+    if extra_roles:
+        print(f"[{tag}] 追问轮委派 {len(extra_roles)} 条 → {extra_roles}"
+              "（晚于首波，不计时窗）")
+    if gap is None:
+        problems.append(f"{tag} 首波时间差未判定（created_at 解析不了）—— 跳过 ≠ 通过")
     elif gap > FANOUT_WINDOW_S:
-        problems.append(f"{tag} 扇出时间差 {gap:.1f}s 超窗 —— 并发扇出退化成顺序派发")
+        problems.append(f"{tag} 首波扇出时间差 {gap:.1f}s 超窗 —— 并发扇出退化成顺序派发")
     return problems
 
 
@@ -471,12 +488,18 @@ async def main() -> int:
               f"反方拿到第一轮正方立场「{pro1[:40]}…」")
     rows2 = new_delegations(snap2, set(aic_map))
     bad += fanout_problems(rows2, aic_map, "R2·扇出")
-    by_role = {aic_map.get(str(r.get("remote_aic"))): r for r in rows2}
+    # ⚠️ 立场断言只打在**首波**委派上：追问轮上线后同一辩手可能有第 2 条
+    #    委派（追问问题文本），dict 全量折叠会拿追问 payload 顶掉首波 payload，
+    #    「立场在对调后送对了」这条判据就被自己的新功能误伤。
+    by_role = {aic_map.get(str(r.get("remote_aic"))): r for r in rows2[:2]}
     t_pro = payload_text(by_role.get("debate-pro"))
     t_con = payload_text(by_role.get("debate-con"))
     if not args.brief:
         print(f"[R2b·payload/正方] {t_pro[:240]}")
         print(f"[R2b·payload/反方] {t_con[:240]}")
+        for r in rows2[2:]:
+            print(f"[R2b·追问payload/{aic_map.get(str(r.get('remote_aic')))}] "
+                  f"{payload_text(r)[:240]}")
     bad += check_swap_in_payloads(t_pro, t_con, pro1, con1)
     j2: dict = {}
     if not rulings2:

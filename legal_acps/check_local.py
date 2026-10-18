@@ -4236,6 +4236,150 @@ def check_guards() -> bool:
                 ok = False
             print(f"  [{'通过' if good3 else '失败'}] 裁判步数预算 · {label}：reason={got3}（期望 {expect}）")
 
+    # —— 追问轮（2026-10-18）：followup_rounds 的行为契约 ——
+    #
+    #    每条都是行为断言（打在 _decide 返回的决策对象上）。
+    #    ⚠️ 同一 run 的步进推演必须**复用同一个 _FakeCtx**（private_state
+    #    挂在 ctx 上、随 run 走）—— 每次新建 _FakeCtx 等于新开一个 run，
+    #    offered / last_delegations 全部归零，"模型不追问⇒锁回裁定"
+    #    这条就永远测不出来。步进用 state["step"] = n 手动模拟（框架
+    #    在真跑时就是这么更新它的）。
+    if judge_guard is not None:
+        _done2 = [
+            _delegated("t1"),
+            _delegated("t2"),
+            _partner_done("t1"),
+            _partner_done("t2"),
+        ]
+
+        def _reason_and_tool(decided):
+            if not decided:
+                return None, None
+            return decided[0].reason, decided[0].force_tool
+
+        # ① 默认关闭（followup_rounds=0）⇒ 旧行为零变化：回齐即锁定
+        off_guard = LeaderTerminationHooks(
+            conclusion_tool="fact_issue_ruling", expected_partners=2
+        )
+        r, t = _reason_and_tool(off_guard._decide(_FakeCtx(list(_done2), 2)))
+        good = (r, t) == ("partners-ready", "fact_issue_ruling")
+        if not good:
+            ok = False
+        print(
+            f"  [{'通过' if good else '失败'}] 追问轮 · 默认关闭零变化："
+            f"reason={r}, force_tool={t}（期望 partners-ready + 锁定）"
+        )
+
+        # ② 同一 run 完整推演：首次回齐 offer → 幂等 → 不追问 → 锁回
+        # ⚠️ 不能写成 `f(x := Hook(...)._decide(ctx))`：海象绑定的是 _decide 的
+        #    **返回值 tuple**，不是 Hook 实例 —— 后面再调 x._decide 会 AttributeError。
+        run_ctx = _FakeCtx(list(_done2), step=2)  # steps_left = 8-3 = 5 ≥ 3
+        followup_guard_a = LeaderTerminationHooks(
+            conclusion_tool="fact_issue_ruling",
+            expected_partners=2,
+            followup_rounds=1,
+        )
+        r1, t1_ = _reason_and_tool(followup_guard_a._decide(run_ctx))
+        good1 = (r1, t1_) == ("followup-offer", None)
+        # 幂等闸：同一步内 context()/wrap_model_call() 各调一次 _decide，
+        # 第二次必须仍是 offer —— 否则工具被锁死、追问功能自我掐死。
+        r2, t2_ = _reason_and_tool(followup_guard_a._decide(run_ctx))
+        good2 = (r2, t2_) == ("followup-offer", None)
+        # 模型选择不追问（输出文本、无新委派）⇒ 下一步必须锁回裁定
+        run_ctx.private_state["step"] = 3
+        r3, t3_ = _reason_and_tool(followup_guard_a._decide(run_ctx))
+        good3_ = (r3, t3_) == ("partners-ready", "fact_issue_ruling")
+        for label, g, rv in [
+            ("首次回齐 + 余量足 ⇒ offer（不锁工具）", good1, r1),
+            ("同一步二次判定 ⇒ 幂等仍 offer", good2, r2),
+            ("模型不追问 ⇒ 下一步锁回裁定", good3_, r3),
+        ]:
+            if not g:
+                ok = False
+            print(f"  [{'通过' if g else '失败'}] 追问轮 · {label}：reason={rv}")
+
+        # ③ 追问后回齐（rounds=1 用完）⇒ 锁定，不再二次 offer
+        q_ctx = _FakeCtx(list(_done2), step=2)
+        q_guard = LeaderTerminationHooks(
+            conclusion_tool="fact_issue_ruling", expected_partners=2, followup_rounds=1
+        )
+        q_guard._decide(q_ctx)  # 消耗掉唯一一次 offer
+        q_ctx.state.messages += [
+            _delegated("q1"),
+            _partner_done("q1"),  # 追问只发了一方
+        ]
+        q_ctx.private_state["step"] = 4
+        rq, tq = _reason_and_tool(q_guard._decide(q_ctx))
+        goodq = (rq, tq) == ("partners-ready", "fact_issue_ruling")
+        if not goodq:
+            ok = False
+        print(
+            f"  [{'通过' if goodq else '失败'}] 追问轮 · 追问回齐即锁定（机会用完不续）："
+            f"reason={rq}"
+        )
+
+        # ④ rounds=2：第一轮追问回齐、仍有新委派 ⇒ 还能再 offer 一次
+        q2_ctx = _FakeCtx(list(_done2), step=2)
+        q2_guard = LeaderTerminationHooks(
+            conclusion_tool="fact_issue_ruling", expected_partners=2, followup_rounds=2
+        )
+        q2_guard._decide(q2_ctx)  # 第 1 次 offer
+        q2_ctx.state.messages += [_delegated("q1"), _partner_done("q1")]
+        q2_ctx.private_state["step"] = 4  # steps_left = 8-5 = 3 ≥ 3
+        rq2, tq2 = _reason_and_tool(q2_guard._decide(q2_ctx))
+        goodq2 = (rq2, tq2) == ("followup-offer", None)
+        if not goodq2:
+            ok = False
+        print(
+            f"  [{'通过' if goodq2 else '失败'}] 追问轮 · rounds=2 追问回齐仍可再 offer："
+            f"reason={rq2}"
+        )
+
+        # ⑤ 预算闸：余量 < 3（追问闭环 3 步走不完）⇒ 不 offer 直接锁定
+        b_ctx = _FakeCtx(list(_done2), step=6)  # steps_left = 8-7 = 1
+        rb, tb = _reason_and_tool(
+            LeaderTerminationHooks(
+                conclusion_tool="fact_issue_ruling",
+                expected_partners=2,
+                followup_rounds=1,
+            )._decide(b_ctx)
+        )
+        goodb = (rb, tb) == ("partners-ready", "fact_issue_ruling")
+        if not goodb:
+            ok = False
+        print(
+            f"  [{'通过' if goodb else '失败'}] 追问轮 · 预算余量不足不给 offer："
+            f"reason={rb}（交付物承诺优先）"
+        )
+
+        # ⑥ 拿不到步号（幂等闸立不起来）⇒ 保守不 offer
+        n_ctx = _FakeCtx(list(_done2), None)
+        rn, tn = _reason_and_tool(
+            LeaderTerminationHooks(
+                conclusion_tool="fact_issue_ruling",
+                expected_partners=2,
+                followup_rounds=1,
+            )._decide(n_ctx)
+        )
+        goodn = (rn, tn) == ("partners-ready", "fact_issue_ruling")
+        if not goodn:
+            ok = False
+        print(
+            f"  [{'通过' if goodn else '失败'}] 追问轮 · 拿不到步号不 offer（保守）："
+            f"reason={rn}"
+        )
+
+        # ⑦ 角色接线：追问能力确实装在 fact-judge 上（「装了」的角色级断言；
+        #    行为已由上六条守住，这条只守配置不漂移）
+        got_fr = getattr(judge_guard, "followup_rounds", None)
+        goodf = got_fr == 1
+        if not goodf:
+            ok = False
+        print(
+            f"  [{'通过' if goodf else '失败'}] 追问轮 · fact-judge 装配 "
+            f"followup_rounds=1（实际 {got_fr}）"
+        )
+
     # —— 缺陷 3（已修）：判定优先级 —— "专家已就绪"必须压过"放弃强制"
     #    早期把 verdict_errors 的放弃判定排在 partners-ready 之前，
     #    模型连错两次表单后即使专家都回来了也不再强制，只剩第 5 层兜底。

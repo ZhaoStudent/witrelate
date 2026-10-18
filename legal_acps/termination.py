@@ -558,6 +558,26 @@ def _force_budget_guard(*, tool: str, peers: str) -> str:
 - 宁可交出一份标注了不确定性的结果，也不要什么都不交。"""
 
 
+def _followup_offer(*, tool: str, peers: str, left: int = 0) -> str:
+    """追问 offer 文案 —— **可选**指令，且绝不替任何一方转述论点。
+
+    为什么文案里不能出现"对方的论点是 XXX"：追问的意义在于**裁判自己**
+    发现依据缺口；系统若转述，等于替裁判做了本该由它做的裁决性归纳。
+    """
+    more = ""
+    if left > 0:
+        more = f"\n- 本次追问之后还剩 {left} 次追问机会；"
+    return f"""═══ 系统提示（可选 · 定向追问）═══
+{peers}的结论已经收齐。在提交最终交付物之前，你**可以**（不是必须）
+向其中任何一位发起**定向追问**，但仅当你认为存在**足以影响裁定的关键缺口**：
+例如某个可核验的关键事实双方都未触及、或双方的陈述直接矛盾而现有信息无法分辨。
+
+- 追问必须是**新的一次委派**，问题要具体、可直接回答；
+- **不要**为了面面俱到而追问 —— 没有关键缺口就直接进入下一步；
+- 决定不追问时，直接调用 {tool} 提交最终交付物；{more}
+- 无论是否追问，最终都必须提交 {tool}，这是本流程的硬性终点。"""
+
+
 def _force_retry(*, tool: str) -> str:
     return f"""═══ 系统强制指令（上一次提交未通过）═══
 你上一次调用 {tool} 没有成功（参数不符合契约）。
@@ -632,6 +652,17 @@ class LeaderTerminationHooks(WitHooks):
         若确认所用模型支持，可开启本项加强；provider 若拒绝会自动降级，不会再崩。
     fallback_on_failure
         前四层都没逼出交付物时，是否用专家载荷程序化补齐一份结论。默认 True。
+    followup_rounds
+        **追问轮（默认 0 = 完全关闭，旧行为零变化）**：下游结论全部回齐、
+        交付物尚未提交时，最多给模型几次「可选的定向追问机会」——
+        注入追问提示但**不锁工具**（模型可再委派，也可直接交结论）。
+
+        ⚠️ 状态挂在 `ctx.private_state`（每轮 run 新建，跨 run 零泄漏），
+        同一步内 `context()` / `wrap_model_call()` 会各调一次 `_decide`，
+        幂等闸靠步号钉住 —— 见 `_maybe_followup`。
+        ⚠️ 预算闸：追问闭环本身要吃 3 步（发追问 → 等结果 → 交交付物），
+        步数余量不足时**宁可不给机会也不 offer**，「output/ 一定有文件」
+        的承诺优先于追问。服务模式 `max_steps=8` 钉死，余量按现场派生。
     verbose
         把每次强制决策打到 stderr。
     """
@@ -653,6 +684,7 @@ class LeaderTerminationHooks(WitHooks):
         force_tool_choice: bool = False,
         fallback_on_failure: bool = True,
         note_field: str = "consistency_note",
+        followup_rounds: int = 0,
         verbose: bool = False,
     ) -> None:
         self.conclusion_tool = str(conclusion_tool)
@@ -664,6 +696,7 @@ class LeaderTerminationHooks(WitHooks):
         self.force_tool_choice = bool(force_tool_choice)
         self.fallback_on_failure = bool(fallback_on_failure)
         self.note_field = str(note_field or "reasoning")
+        self.followup_rounds = max(0, int(followup_rounds))
         self.verbose = verbose
         # 供离线验证脚本 / 排障使用：记录每一次强制决策
         self.trace: list[dict[str, Any]] = []
@@ -718,6 +751,80 @@ class LeaderTerminationHooks(WitHooks):
             return f"本轮派出的 {progress.delegations} 位下游"
         return self.partner_label
 
+    # -- 追问轮（可选）------------------------------------------------------
+
+    #: 追问闭环的最小步数余量：发追问委派 1 步 + 等追问结果 1 步 + 交交付物 1 步。
+    #: 余量不足时宁可不 offer —— 交付物承诺优先于追问机会。
+    FOLLOWUP_MIN_STEPS_LEFT = 3
+
+    _FOLLOWUP_OFFERED_KEY = "termination.followup_offered"
+    _FOLLOWUP_DELEGATIONS_KEY = "termination.followup_delegations"
+    _FOLLOWUP_STEP_KEY = "termination.followup_offer_step"
+    _FOLLOWUP_CACHE_KEY = "termination.followup_decision"
+
+    def _maybe_followup(
+        self, ctx: HookContext, progress: LeaderProgress
+    ) -> _Decision | None:
+        """首次（或追问后再次）全部回齐时，给一次**可选的追问机会**。
+
+        返回 None 表示不给机会（调用方落回原 partners-ready 锁定）。
+
+        判定全部从 `private_state` + 消息快照现场派生（每轮 run 新建的 dict，
+        跨 run 零泄漏）：
+        · ``_FOLLOWUP_OFFERED_KEY``   已 offer 次数，达到 ``followup_rounds`` 封顶；
+        · ``_FOLLOWUP_DELEGATIONS_KEY`` 上次 offer 时的委派数 —— 之后没有新委派
+          = 模型选择不追问，**不再重复 offer**（否则同一个 offer 每步注入一次，
+          模型又无法追问，纯烧预算）；
+        · 幂等闸：同一步内 ``context()`` 与 ``wrap_model_call()`` 各调一次
+          ``_decide``。若不做幂等，第二次调用会看到 offered 已 +1 而落回锁定
+          分支 —— **工具被锁死、追问功能被自己掐死**。靠步号钉住：本步已
+          offer ⇒ 原样返回缓存的同一决策。
+        · 拿不到步号（``state["step"]`` 缺失）⇒ 幂等闸立不起来 ⇒ 宁可不 offer。
+        """
+        if self.followup_rounds <= 0:
+            return None
+        state = getattr(ctx, "private_state", None)
+        if not isinstance(state, dict):
+            return None
+        step = state.get("step")
+        if not isinstance(step, int) or step < 0:
+            return None
+        # 幂等闸：本步已 offer 过 ⇒ 两个入口拿到同一决策
+        if state.get(self._FOLLOWUP_STEP_KEY) == step:
+            cached = state.get(self._FOLLOWUP_CACHE_KEY)
+            if isinstance(cached, _Decision):
+                return cached
+        offered = state.get(self._FOLLOWUP_OFFERED_KEY, 0)
+        if not isinstance(offered, int) or offered >= self.followup_rounds:
+            return None
+        last_delegations = state.get(self._FOLLOWUP_DELEGATIONS_KEY, -1)
+        if progress.delegations <= last_delegations:
+            return None
+        steps_left = self._steps_left(ctx)
+        if steps_left is not None and steps_left < self.FOLLOWUP_MIN_STEPS_LEFT:
+            self._log(f"追问余量不足（steps_left={steps_left}），跳过 offer")
+            return None
+        decision = _Decision(
+            reason="followup-offer",
+            force_tool=None,
+            clear_tools=False,
+            nudge=_followup_offer(
+                tool=self.conclusion_tool,
+                peers=self._peers_label(progress),
+                left=self.followup_rounds - offered - 1,
+            ),
+        )
+        state[self._FOLLOWUP_OFFERED_KEY] = offered + 1
+        state[self._FOLLOWUP_DELEGATIONS_KEY] = progress.delegations
+        state[self._FOLLOWUP_STEP_KEY] = step
+        state[self._FOLLOWUP_CACHE_KEY] = decision
+        self.record(decision, progress)
+        self._log(
+            f"追问 offer #{offered + 1}/{self.followup_rounds} "
+            f"(steps_left={steps_left}) | {progress.summary}"
+        )
+        return decision
+
     def _decide(self, ctx: HookContext) -> tuple[_Decision, LeaderProgress] | None:
         """返回 (决策, 进度快照)；不需要干预时返回 None。"""
         messages = getattr(getattr(ctx, "state", None), "messages", None)
@@ -766,6 +873,13 @@ class LeaderTerminationHooks(WitHooks):
         #    （"依赖回来 ⇒ 必须出交付物"），结果是只拿到第 5 层的程序兜底结论。
         target = max(self.expected_partners, progress.delegations)
         if progress.resolved >= target:
+            # ── 追问轮（可选，默认关闭）───────────────────────────────────
+            # 首次（或追问后再次）全部回齐且交付物未提交 ⇒ 先给一次可选的
+            # 定向追问机会（不锁工具）；机会用完 / 模型不接 / 余量不足 ⇒
+            # 落回下面的锁定分支，行为与旧版完全一致。
+            followup = self._maybe_followup(ctx, progress)
+            if followup is not None:
+                return followup, progress
             return (
                 _Decision(
                     "partners-ready",
@@ -844,9 +958,14 @@ class LeaderTerminationHooks(WitHooks):
         if not decision.nudge:
             return []
         self._log(f"注入提示 reason={decision.reason} | {progress.summary}")
+        title = (
+            "追问机会（系统提示 · 可选）"
+            if decision.reason == "followup-offer"
+            else "终止约束（系统强制）"
+        )
         return [
             ContextBlock.text(
-                title="终止约束（系统强制）",
+                title=title,
                 value=decision.nudge,
                 metadata={"source": self.id, "reason": decision.reason},
             )
