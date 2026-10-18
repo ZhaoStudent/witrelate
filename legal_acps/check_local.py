@@ -1130,12 +1130,21 @@ def _check_fetch_facts(ok: bool) -> bool:
     facts_dir = Path(__file__).resolve().parent / "facts"
     raws = sorted(facts_dir.glob("raw-*.jsonl")) if facts_dir.is_dir() else []
     n = 0
+    n_evidence = 0  # 跳过白名单检查的本系统核验记录数（跳过必须可见）
     if not raws:
         print("  [跳过·不计通过] 没有 `legal_acps/facts/raw-*.jsonl` ⇒ "
               "「外链没混进来」**没有被验证**（先跑 `python -m tools.fetch_facts`）")
     else:
         offsite: list[str] = []
         baddate: list[str] = []
+        # 方案②核验记录（url=`evidence://…`，单一来源在 fact_store）：它们是
+        # **本系统产出**而非网页抓取原料，溯源纪律由事实库节 (8) 的判据管辖
+        # （渲染形态 / 安全闸 / 去重 / 接线）。这里跳过白名单检查，但**单独
+        # 计数报出**——「跳过了几条」不进任何输出 = 静默关掉判据的输入集合
+        # （10-18 s1 实证：真机落了一条核验记录后本节立刻红，而本地从没跑过
+        # 真机探针 ⇒ 本地永远看不见这个红——判据平台相关的活例）。
+        from legal_acps.fact_store import EVIDENCE_URL_PREFIX
+        n_evidence = 0
         for p in raws:
             for line in p.read_text(encoding="utf-8").splitlines():
                 if not line.strip():
@@ -1144,6 +1153,9 @@ def _check_fetch_facts(ok: bool) -> bool:
                 try:
                     rec = json.loads(line)
                 except ValueError:
+                    continue
+                if str(rec.get("url") or "").startswith(EVIDENCE_URL_PREFIX):
+                    n_evidence += 1
                     continue
                 host = urllib.parse.urlsplit(rec.get("url", "")).hostname or ""
                 if host not in ff.ALLOWED_HOSTS:
@@ -1164,11 +1176,16 @@ def _check_fetch_facts(ok: bool) -> bool:
             print(f"  [失败] {len(raws)} 个原料文件里**一条记录都没有** ⇒ "
                   f"抓取器静默产出空库，而「零条」与「站点改版」长得一样")
             ok, bad = False, bad + 1
+        elif n_evidence:
+            print(f"  [注] 原料里另有 {n_evidence} 条本系统核验记录"
+                  f"（{EVIDENCE_URL_PREFIX}…，非网页原料，归事实库节 (8) 管辖）")
 
     if not bad:
         print(f"  [通过] 出网闸门在发请求之前拦住非 https / 白名单外 / 本机地址"
               f"（请求未发出）；白名单无本机内网通配；日期与原始发布方"
-              f"推不出即留空；原料 {n} 条全在白名单域")
+              f"推不出即留空；原料 {n} 条全在白名单域"
+              + (f"（含 {n_evidence} 条 evidence:// 核验记录，另归 (8) 管）"
+                 if n_evidence else ""))
     return ok
 
 
@@ -2071,9 +2088,118 @@ def _check_human_debate(ok: bool) -> bool:
                   "会污染先例")
             ok, bad = False, bad + 1
 
+    # ── (7) 方案③证据注入：渲染 / 注入零变化 / 循环集成 / 拒收不拉重依赖 ──
+    #     体验层的核心承诺：用户提交的媒体证据在开辩前被本地核验，技术线索
+    #     连同 caveat 注入**每一轮**正方输入。四组断言把承诺钉死：
+    #       (7a) 渲染形态（纯函数，假记录——等级 / caveat / 铁律句 / 未核验原因）
+    #       (7b) 注入被采纳 + 默认零变化（老路径逐字节不动）
+    #       (7c) 整循环集成（evidence 台账行 + brief 进每轮输入——行为断言）
+    #       (7d) 拒收路径不拉重依赖（numpy/PIL 进 check_local 进程 = 判据
+    #            自己成为故障源，与 3c 探针泄漏判据同一条纪律）
+    _ev_verified = {
+        "name": "scene.jpg", "path": "/tmp/scene.jpg", "status": "verified",
+        "modality": "image", "media_type": "image/jpeg", "byte_size": 1024,
+        "sha256": "abcdef0123456789" * 4, "suspicion": "中",
+        "rationale": "一项提示异常：复制-移动",
+        "findings": [
+            {"check": "copy_move", "verdict": "未提示异常", "strength": None,
+             "detail": "无信号", "caveat": "阴性不证明干净"},
+            {"check": "ela", "verdict": "提示异常", "strength": 0.6,
+             "detail": "ELA 亮区集中在一处", "caveat": "压缩伪影也能造成"},
+            {"check": "exif", "verdict": "无法判定", "strength": None,
+             "detail": "EXIF 被剥掉", "caveat": "社交平台转存常见"},
+        ],
+    }
+    _ev_refused = {"name": "note.txt", "path": "/tmp/note.txt",
+                   "status": "refused", "reason": "三个模态的容器判定都认不出"}
+
+    # (7a) 渲染形态
+    brief = hd.render_evidence_brief([_ev_verified, _ev_refused])
+    _need = ["综合线索等级：中", "ELA 亮区集中在一处", "caveat：压缩伪影也能造成",
+             "其余 1 项未提示异常", "未核验", "三个模态的容器判定都认不出",
+             "未经检验的主张", hd.EVIDENCE_BRIEF_TITLE, hd.EVIDENCE_BRIEF_RULES]
+    _miss = [s for s in _need if s not in brief]
+    if _miss or hd.render_evidence_brief([]) != "":
+        print(f"  [失败] 证据渲染：brief 缺 {_miss or '（或空记录未返回空串）'}"
+              " ⇒ 注入段丢等级/caveat/铁律，正方拿到的是无护栏的裸线索")
+        ok, bad = False, bad + 1
+
+    # (7b) 注入被采纳 + 默认零变化（复用 (1) 的 text3/text1：不传 brief 的
+    #      老调用必须与旧形态完全一致——锚不许被新参数悄悄改变）
+    text_ev = hd.build_round_input(
+        "事件描述XYZ", "该传闻属实", hist, "用户三轮论点戊", 3,
+        evidence_brief=brief)
+    if "已核验证据技术线索" not in text_ev or "ELA 亮区集中在一处" not in text_ev:
+        print("  [失败] 证据注入：brief 没有进正方输入 ⇒ 核验做了白做"
+              "（渲染对了但没接上链路）")
+        ok, bad = False, bad + 1
+    if "已核验证据技术线索" in text3 or "已核验证据技术线索" in text1:
+        print("  [失败] 证据注入：不传 brief 的老输入混进了证据段"
+              " ⇒ 默认零变化被破坏（⑦-6 旧锚判据全部失真）")
+        ok, bad = False, bad + 1
+
+    # (7c) 整循环集成：evidence 行进台账且在 session_open 之后；brief 进每轮输入
+    _seen_ev: list[str] = []
+
+    async def _ev_invoke(text, round_no, attempt):
+        _seen_ev.append(text)
+        return _run([_submit(_hold_arg(round_no))])
+
+    with tempfile.TemporaryDirectory() as td:
+        ledger = hd.DebateLedger("probe-ev", directory=Path(td) / "debates")
+        outcome = asyncio.run(hd.run_debate(
+            "测试事件", pro_stance="该传闻属实", max_rounds=2,
+            user_source=lambda n: f"用户第{n}轮" if n <= 2 else None,
+            ledger=ledger, invoke=_ev_invoke, retries=1, sid="probe-ev",
+            mode="probe",
+            evidence_records=[_ev_verified, _ev_refused]))
+        lines = [json.loads(ln) for ln in
+                 ledger.path.read_text(encoding="utf-8").splitlines()
+                 if ln.strip()]
+        ev = next((l for l in lines if l["type"] == "evidence"), None)
+        types = [l["type"] for l in lines]
+        ev_ok = (
+            ev is not None
+            and types.index("evidence") == 1  # 紧跟 session_open
+            and len(ev.get("files") or []) == 2
+            and (ev["files"][0].get("suspicion") == "中")
+            and (ev["files"][1].get("status") == "refused")
+            and ev["files"][0].get("detail") is None  # 只存索引级事实
+        )
+        if outcome != "max_rounds" or not ev_ok:
+            print(f"  [失败] 证据循环：outcome={outcome} evidence行形态={ev and '有' or '无'}"
+                  " ⇒ 核验事实没进台账（或进了结论级内容，违反只存事实纪律）")
+            ok, bad = False, bad + 1
+        if len(_seen_ev) < 2 or not all(
+                "已核验证据技术线索" in t for t in _seen_ev[:2]):
+            print(f"  [失败] 证据循环：{_seen_ev and len(_seen_ev)} 轮输入里"
+                  " brief 没有全程在场 ⇒ 线索只在第 1 轮可见，正方第 2 轮"
+                  "就当证据没核验过")
+            ok, bad = False, bad + 1
+
+    # (7d) 拒收路径不拉重依赖（快照前后比对，同 3c 泄漏判据形态）
+    import sys as _sys7
+    _heavy7 = ("numpy", "PIL")
+    _before7 = {m for m in _heavy7 if m in _sys7.modules}
+    with tempfile.TemporaryDirectory() as td:
+        _nope = Path(td) / "不存在.jpg"
+        _tiny = Path(td) / "太小.bin"
+        _tiny.write_bytes(b"\xff\xd8\xff" + b"x" * 3)   # 6 字节 < 12
+        r1_ = hd.verify_evidence_file(_nope)
+        r2_ = hd.verify_evidence_file(_tiny)
+    _leaked7 = {m for m in _heavy7 if m in _sys7.modules} - _before7
+    if r1_.get("status") != "refused" or "读不了" not in str(r1_.get("reason")) \
+            or r2_.get("status") != "refused" \
+            or _leaked7:
+        print(f"  [失败] 证据拒收：r1={r1_.get('status')} r2={r2_.get('status')}"
+              f" 泄漏={_leaked7 or '无'} ⇒ 拒收要么没留原因，要么把 numpy/PIL"
+              " 拉进了自检进程（判据自己成为故障源——缺依赖的机器自检起不来）")
+        ok, bad = False, bad + 1
+
     if bad == 0:
         print("  [通过] 人机辩论：回放 / 抽取 / 终止 / 循环 / append-only /"
-              " 隔离 全部离线断言绿（真机对跑另见 output/debates/）")
+              " 隔离 / 证据注入（渲染·零变化·循环·拒收）全部离线断言绿"
+              "（真机对跑另见 output/debates/）")
     return ok
 
 

@@ -69,6 +69,54 @@ CASES = [
         "old": '    if str(pro.get("stance") or "") == "":',
         "needle": "[失败] 人机辩论终止",
     },
+    # ── 方案③（证据核验注入）四处要害，对应 check_local ⑦-6(7) ──────────
+    {
+        "name": "证据 brief 必须带使用规则（铁律句不许被裁掉）",
+        "why": "裸线索没有 caveat/「线索≠真伪结论」护栏，正方（分配了立场的"
+               "辩手）会拿「等级中」当「图是假的」用——体验层最危险的失真。",
+        "file": ROOT / "legal_acps" / "human_debate.py",
+        "new": "    lines.append(EVIDENCE_BRIEF_RULES)",
+        "old": "    # lines.append(EVIDENCE_BRIEF_RULES)  # 退回：铁律句被裁",
+        "needle": "[失败] 证据渲染",
+    },
+    {
+        "name": "brief 必须真的拼进正方输入（渲染对了≠接上链路）",
+        "why": "「送出去」与「被采纳」各要一条判据：渲染函数绿了、拼接处"
+               "漏传参数，核验就是做了白做——台账有 evidence 行、正方却"
+               "什么都没看到。",
+        "file": ROOT / "legal_acps" / "human_debate.py",
+        "new": "        parts.append(evidence_brief)",
+        "old": "        pass  # parts.append(evidence_brief)",
+        "needle": "[失败] 证据注入",
+    },
+    {
+        "name": "主循环每轮都必须带 brief（不许只带第一轮）",
+        "why": "证据线索是**全程事实**：第 2 轮起丢了 brief，正方回放里只剩"
+               "历史论点，会把已核验的证据当成对方临场掏出来的新主张重新"
+               "质疑——核验的中立公证被架空。",
+        "file": ROOT / "legal_acps" / "human_debate.py",
+        "new": ("            text = build_round_input(event, pro_stance, history,\n"
+                "                                     user_arg, round_no,\n"
+                "                                     evidence_brief=brief)"),
+        "old": ("            text = build_round_input(event, pro_stance, history,\n"
+                "                                     user_arg, round_no,)"),
+        "needle": "[失败] 证据循环",
+    },
+    {
+        "name": "轻量拒收闸不许拆（小文件也要走零 import 的拒收路）",
+        "why": "拆掉长度闸 ⇒ 垃圾字节直接落进三个 forensics 的 import："
+               "numpy/PIL 进 check_local 进程 = 判据自己成为故障源，"
+               "缺 Pillow 的机器自检起不来（与 3c 探针泄漏判据同一条纪律）。",
+        "file": ROOT / "legal_acps" / "human_debate.py",
+        "new": ("    if len(data) < 12:\n"
+                "        rec.update(status=\"refused\",\n"
+                "                   reason=f\"文件只有 {len(data)} 字节，"
+                "小到装不下任何媒体容器\")\n"
+                "        return rec"),
+        "old": ("    if len(data) < 12:\n"
+                "        pass  # 退回：长度闸被拆，小文件直落 forensics"),
+        "needle": "[失败] 证据拒收",
+    },
 ]
 
 

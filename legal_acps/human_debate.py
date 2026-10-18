@@ -133,6 +133,179 @@ class DebateLedger:
         self.append({"type": "session_close", "outcome": outcome,
                      "rounds": rounds})
 
+    def evidence_note(self, records: list[dict]) -> None:
+        """开辩前的证据核验记录（方案③）。**只存事实**（与 open/round 同纪律）：
+        每个文件一条——名字、路径、状态、模态、等级、指纹、拒收原因；
+        findings 逐条明细不进台账（brief 会随每轮输入全文回放，台账存
+        索引级事实即可追源）。"""
+        self.append({"type": "evidence", "files": [
+            {k: rec.get(k) for k in
+             ("name", "path", "status", "modality", "media_type",
+              "suspicion", "sha256", "reason")}
+            for rec in records
+        ]})
+
+
+# ══════════════════════════════════════════════════════════════════════
+# 方案③（2026-10-18）：用户证据 · 本地核验 · 注入辩论（体验层）
+# ══════════════════════════════════════════════════════════════════════
+#
+# 反诈体验的高光场景：用户拿一张"现场实拍图"当王牌证据甩出来，系统当场
+# 做本地核验（确定性代码，不出网、不跑模型），把技术线索**如实**注入辩论
+# 上下文——正方（分配了相反立场的辩手）据此驳斥。用户由此亲身经历
+# 「我以为是铁证的图，其实是拼接的」——这正是"体验被欺骗的感觉"的本体。
+#
+# 设计边界（与主链同一条铁律，一处不松）：
+#   · **只给线索，不定性**：注入的是 suspicion 等级 + 逐条 caveat，
+#     绝不出现「证据是假的 / 主张不实」——那是裁判的活，不是核验的活。
+#   · 核验**中立**：结论对用户不利（检出拼接）也照实注入——它不是
+#     用户的助手，是辩论的公证人。
+#   · **旁路纪律**：核验失败/拒收（文件读不了、认不出容器、超大小上限）
+#     ⇒ 台账如实记 refused + 原因，brief 里如实写「未核验」，**绝不静默**，
+#     也**不挡辩论**——没有证据的辩论本来就是合法形态。
+#   · 与主链②（fact_store 落库）**刻意不合并**：体验层的核验不进事实库
+#     （它是实验/演示通道，进库会污染生产检索面）；判据锚各自独立。
+#   · 🔴 重依赖隔离：三个模态的 forensics 模块都是 numpy(+PIL) 重模块，
+#     而 check_local 要能在缺它们的机器上导入本模块 ⇒ **所有 forensics
+#     import 都必须在函数体内**（与 3c 的探针泄漏判据同一条纪律）。
+
+#: 证据文件的大小上限。体验层面向"随手甩一张图/一段录音"，不是送检通道；
+#: 上限挡的是「把整个电影扔进来把进程内存吃爆」。
+EVIDENCE_MAX_BYTES = 32 * 1024 * 1024
+
+#: 注入段标题与使用规则——**固定文案**（判据锚：渲染判据认这些句子）。
+EVIDENCE_BRIEF_TITLE = (
+    "【已核验证据技术线索（系统在开辩前对用户提交的媒体文件做的本地核验；"
+    "以下是事实，不是任何一方的立场）】"
+)
+EVIDENCE_BRIEF_RULES = (
+    "使用规则：① 技术线索只评价**证据载体本身**，不能单独证明或推翻"
+    "事件主张的真伪；② 引用任何一条线索时必须连同它的 caveat 一起；"
+    "③ 「未执行 / 无法判定」是「没查」，不是「查过没事」。"
+)
+
+
+def verify_evidence_file(path: Path) -> dict:
+    """读一个证据文件 → 本地核验（确定性代码）。返回**只含事实**的记录。
+
+    返回形态（status 三值）：
+      · ``verified`` —— 有 modality / media_type / suspicion / rationale /
+        sha256 / findings（逐条 check/verdict/detail/caveat）；
+      · ``refused``  —— 读不了 / 太小 / 超上限 / 三模态都认不出容器，
+        ``reason`` 是人话原因（调用方必须原样转述，不许静默吞）；
+      · ``error``    —— forensics 抛了意外异常（reason 带异常名）。
+
+    🔴 模态分诊的单一来源：**容器判定由各模态自己的 ``analyze()`` 做**
+    （image → video → audio 依次尝试，认不出会抛 ValueError 自动降级），
+    本函数不复制魔术字节表（复制了必漂移——检测层加新格式、这边还在拒）。
+    唯一的自主逻辑是 MP4 家族按 ``ftyp`` 品牌预分流（``M4A`` 前缀 = 纯音频，
+    其余 = 视频）：三个 sniffer 对 ``ftyp`` 的声明互相冲突（audio 侧全收、
+    video 侧也全收），不预分流的话 MP4 视频会被 audio 侧截胡。
+    """
+    rec: dict = {"path": str(path), "name": Path(path).name}
+    try:
+        data = Path(path).read_bytes()
+    except OSError as exc:
+        rec.update(status="refused",
+                   reason=f"读不了文件：{type(exc).__name__}: {exc}")
+        return rec
+    if len(data) < 12:
+        rec.update(status="refused",
+                   reason=f"文件只有 {len(data)} 字节，小到装不下任何媒体容器")
+        return rec
+    if len(data) > EVIDENCE_MAX_BYTES:
+        rec.update(status="refused",
+                   reason=f"{len(data)} 字节超过体验层上限 "
+                   f"{EVIDENCE_MAX_BYTES}（正式送检请走线下司法鉴定通道）")
+        return rec
+
+    # MP4 家族预分流（见 docstring）；其余按 image → video → audio 降级。
+    if data[4:8] == b"ftyp" and data[8:12].startswith(b"M4A"):
+        order = ("audio",)
+    else:
+        order = ("image", "video", "audio")
+
+    def _analyzer(modality: str):
+        # 🔴 函数体内 import（重依赖隔离，见模块头方案③段）。
+        if modality == "image":
+            from legal_acps.evidence.forensics import analyze
+        elif modality == "video":
+            from legal_acps.video.forensics import analyze
+        else:
+            from legal_acps.audio.forensics import analyze
+        return analyze
+
+    refused_reasons: list[str] = []
+    for modality in order:
+        try:
+            report = _analyzer(modality)(data, name=rec["name"])
+        except ValueError as exc:
+            # 该模态的容器判定认不出 ⇒ 换下一个（单一来源在 analyze 里）
+            refused_reasons.append(f"{modality}: {exc}")
+            continue
+        except Exception as exc:  # noqa: BLE001 —— 意外异常如实记，不挡辩论
+            rec.update(status="error",
+                       reason=f"{modality} 核验抛异常：{type(exc).__name__}: {exc}")
+            return rec
+        dump = report.model_dump(mode="json")
+        rec.update(
+            status="verified",
+            modality=modality,
+            media_type=dump.get("media_type") or "",
+            byte_size=dump.get("byte_size") or len(data),
+            sha256=dump.get("sha256") or "",
+            suspicion=dump.get("suspicion") or "无法判定",
+            rationale=dump.get("suspicion_rationale") or "",
+            findings=[
+                {"check": f.get("check"), "verdict": f.get("verdict"),
+                 "strength": f.get("strength"), "detail": f.get("detail"),
+                 "caveat": f.get("caveat")}
+                for f in (dump.get("findings") or [])
+            ],
+        )
+        return rec
+    rec.update(status="refused",
+               reason="三个模态的容器判定都认不出（"
+                      + "；".join(refused_reasons) + "）")
+    return rec
+
+
+def render_evidence_brief(records: list[dict]) -> str:
+    """把核验记录渲染成注入正方输入的「已核验证据技术线索」段。
+
+    **纯函数（判据锚）**：输入只有记录 dict，输出只有字符串——
+    check_local ⑦-6(7) 用假记录断言渲染形态，不碰真媒体文件。
+    空记录 ⇒ 空串（= 辩论输入零变化，老路径完全不动）。
+    """
+    if not records:
+        return ""
+    lines = [EVIDENCE_BRIEF_TITLE]
+    for i, r in enumerate(records, 1):
+        if r.get("status") != "verified":
+            lines.append(
+                f"{i}. 文件 {r.get('name')}：**未核验**"
+                f"（{r.get('reason') or '原因未记录'}）。"
+                "它只能作为**未经检验的主张**参与辩论，不得当作已验证事实。"
+            )
+            continue
+        sha = str(r.get("sha256") or "")
+        lines.append(
+            f"{i}. 文件 {r.get('name')}（{r.get('media_type')}，"
+            f"{r.get('byte_size')} 字节，sha256={sha[:16]}…）"
+        )
+        lines.append(f"   综合线索等级：{r.get('suspicion')} —— {r.get('rationale')}")
+        flagged = [f for f in (r.get("findings") or [])
+                   if f.get("verdict") != "未提示异常"]
+        for f in flagged:
+            head = str(f.get("detail") or f.get("check") or "")
+            lines.append(f"   · {head}（caveat：{f.get('caveat')}）")
+        clean = len(r.get("findings") or []) - len(flagged)
+        if clean > 0:
+            lines.append(f"   其余 {clean} 项未提示异常"
+                         "（阴性只说明未见信号，不能证明载体干净）。")
+    lines.append(EVIDENCE_BRIEF_RULES)
+    return "\n".join(lines)
+
 
 # ══════════════════════════════════════════════════════════════════════
 # 三个纯函数：判据的锚（check_local ⑦-6 / run/meta_verify_human_debate.py）
@@ -140,14 +313,22 @@ class DebateLedger:
 
 
 def build_round_input(event: str, pro_stance: str, history: list[dict],
-                      user_argument: str, round_no: int) -> str:
+                      user_argument: str, round_no: int,
+                      evidence_brief: str = "") -> str:
     """拼正方第 round_no 轮的输入：事件 + 立场 + **全部**历史回放 + 本轮论点。
 
     无框架会话 ⇒ 记忆全靠显式回放：history 里的每一轮（用户论点 + 正方
     key_point + 信心）都必须逐字进输入 —— 漏一轮，正方就当那轮没发生过。
+
+    ``evidence_brief``（方案③，默认空串 = 输入与旧形态**逐字节一致**，
+    老路径零变化）：``render_evidence_brief`` 的产出，插在立场之后、
+    历史回放之前 —— 每轮都带（证据线索是**全程事实**，不是某一轮的论点，
+    后加入场反而会被正方当成"临场掏出来的新东西"重新质疑一遍）。
     """
     parts = [f"【待辩论事件】\n{event.strip()}",
              f"你被分配的立场：**{pro_stance}**。"]
+    if evidence_brief:
+        parts.append(evidence_brief)
     if history:
         replay = []
         for h in history:
@@ -225,17 +406,29 @@ async def run_debate(event: str, *, pro_stance: str, max_rounds: int,
                      model=None, invoke=None, retries: int = DEFAULT_RETRIES,
                      max_steps: int = DEFAULT_MAX_STEPS, sid: str = "",
                      mode: str = "interactive",
-                     on_round: OnRound | None = None) -> str:
+                     on_round: OnRound | None = None,
+                     evidence_records: list[dict] | None = None,
+                     on_input=None) -> str:
     """跑一场人机辩论，返回 outcome（close 行已同步写入台账）。
 
-    可注入的两处（check_local ⑦-6 靠它们做**离线行为断言**，不碰真模型）：
+    可注入的三处（check_local ⑦-6 靠它们做**离线行为断言**，不碰真模型）：
       · invoke(text, round_no, attempt) -> run 对象 —— 默认 _invoke_pro；
-      · user_source(round_no) -> str | None —— CLI 的交互/脚本两种来源。
+      · user_source(round_no) -> str | None —— CLI 的交互/脚本两种来源；
+      · on_input(round_no, text) —— 每轮**实际发给正方**的全文回调
+        （方案③真机探针用它断言「注入被采纳」：brief 真的进了输入）。
     每轮顺序：用户论点 → 拼输入 → 正方（失败记账+重试）→ **先落台账** →
     展示 → 终止判定。中断（Ctrl+C）也走 finally 关台账。
+
+    ``evidence_records``（方案③，默认 None = 行为零变化）：
+    ``verify_evidence_file`` 的产出列表。开辩时渲染一次 brief、
+    台账记一行 evidence（事实），此后**每轮**输入都带同一段 brief。
+    核验失败/拒收不挡辩论（旁路纪律，见 verify_evidence_file）。
     """
     ledger.open_session(event=event, pro_stance=pro_stance,
                         max_rounds=max_rounds, mode=mode, retries=retries)
+    if evidence_records:
+        ledger.evidence_note(evidence_records)
+    brief = render_evidence_brief(evidence_records or [])
     history: list[dict] = []
     outcome = "user_exit"
     rounds_done = 0
@@ -248,7 +441,13 @@ async def run_debate(event: str, *, pro_stance: str, max_rounds: int,
                 break
             user_arg = str(user_arg).strip()
             text = build_round_input(event, pro_stance, history,
-                                     user_arg, round_no)
+                                     user_arg, round_no,
+                                     evidence_brief=brief)
+            if on_input is not None:
+                try:
+                    on_input(round_no, text)
+                except Exception:  # noqa: BLE001 —— 观测回调不许挡辩论
+                    pass
 
             pro: dict | None = None
             reason = ""
@@ -365,6 +564,41 @@ def _read_multiline(prompt: str) -> str:
     return "\n".join(buf).strip()
 
 
+def _read_evidence_paths() -> list[Path]:
+    """交互模式下问一次：有没有媒体证据要提交（方案③）。
+
+    逗号/空格分隔多个路径；直接回车 = 没有证据（合法形态，辩论照跑）。
+    路径读不读得了、认不认得出容器，由 ``verify_evidence_file`` 在
+    开辩前逐个核验并如实报告——这里不做任何预判。
+    """
+    try:
+        raw = input("媒体证据文件路径，多个用逗号分隔（图/音/视频；"
+                    "系统会在开辩前做本地核验，技术线索同步给正方；"
+                    "没有就回车跳过）：").strip()
+    except EOFError:
+        return []
+    out: list[Path] = []
+    for tok in raw.replace("，", ",").replace(" ", ",").split(","):
+        tok = tok.strip()
+        if tok:
+            out.append(Path(tok))
+    return out
+
+
+def _print_evidence(records: list[dict]) -> None:
+    """把核验结果如实打给用户看（含拒收原因——绝不静默）。"""
+    if not records:
+        return
+    print("\n── 证据核验（本地 · 确定性代码，只给线索不定性）────────")
+    for i, r in enumerate(records, 1):
+        if r.get("status") == "verified":
+            print(f"  {i}. {r['name']}：{r['media_type']}，"
+                  f"综合线索等级 {r['suspicion']}（{r['sha256'][:16]}…）")
+        else:
+            print(f"  {i}. {r['name']}：**未核验** —— {r.get('reason')}")
+    print("  （线索等级会连同逐条 caveat 注入辩论，正反双方都看得到）\n")
+
+
 def _print_round(round_no: int, pro: dict) -> None:
     stance = str(pro.get("stance") or "?")
     label = "认输（concede）" if stance == "concede" else "坚持（hold）"
@@ -390,6 +624,10 @@ def main() -> int:
                     help=f"每轮失败重试次数（默认 {DEFAULT_RETRIES}）")
     ap.add_argument("--script", type=Path,
                     help="用户论点脚本（每行一轮，# 注释；读完=退出）")
+    ap.add_argument("--evidence", type=Path, action="append", default=[],
+                    metavar="FILE",
+                    help="媒体证据文件（可重复；开辩前本地核验，"
+                         "技术线索注入辩论。交互模式不传则现场询问）")
     ap.add_argument("--sid", help="会话 id（默认现场生成时间戳）")
     args = ap.parse_args()
 
@@ -407,6 +645,14 @@ def main() -> int:
         user_source = interactive_user_source()
         mode = "interactive"
 
+    # 方案③：证据核验在**开辩前**做一次（证据是全程事实，不是某一轮的论点）。
+    evidence_paths = list(args.evidence)
+    if not args.script and not evidence_paths:
+        evidence_paths = _read_evidence_paths()
+    evidence_records = ([verify_evidence_file(p) for p in evidence_paths]
+                        if evidence_paths else [])
+    _print_evidence(evidence_records)
+
     from legal_acps.llm import build_model
     model = build_model()
 
@@ -415,7 +661,8 @@ def main() -> int:
     outcome = asyncio.run(run_debate(
         event, pro_stance=args.pro_stance, max_rounds=args.max_rounds,
         user_source=user_source, ledger=ledger, model=model, sid=sid,
-        mode=mode, retries=args.retries, on_round=_print_round))
+        mode=mode, retries=args.retries, on_round=_print_round,
+        evidence_records=evidence_records or None))
 
     print(f"\n辩论结束：outcome = {outcome}；台账 = {ledger.path}")
     if outcome == "error":
