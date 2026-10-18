@@ -4335,8 +4335,11 @@ def check_guards() -> bool:
             f"reason={rq2}"
         )
 
-        # ⑤ 预算闸：余量 < 3（追问闭环 3 步走不完）⇒ 不 offer 直接锁定
-        b_ctx = _FakeCtx(list(_done2), step=6)  # steps_left = 8-7 = 1
+        # ⑤ 预算闸（2026-10-18 用户拍板由 3 降为 2）：余量 < 2 ⇒ 不 offer 直接锁定；
+        #    余量 = 2 ⇒ **必须 offer**（这条正向断言是降闸的意义所在——
+        #    没有它，闸值改动只是改了个数，行为没变就是空转）。
+        #    真机常态：双方回齐时 steps_left=2（受理→发现→派发→等待→等待 = 5 步）。
+        b_ctx = _FakeCtx(list(_done2), step=6)  # steps_left = 8-7 = 1 < 2
         rb, tb = _reason_and_tool(
             LeaderTerminationHooks(
                 conclusion_tool="fact_issue_ruling",
@@ -4348,8 +4351,24 @@ def check_guards() -> bool:
         if not goodb:
             ok = False
         print(
-            f"  [{'通过' if goodb else '失败'}] 追问轮 · 预算余量不足不给 offer："
+            f"  [{'通过' if goodb else '失败'}] 追问轮 · 预算余量不足（1 步）不给 offer："
             f"reason={rb}（交付物承诺优先）"
+        )
+
+        e_ctx = _FakeCtx(list(_done2), step=5)  # steps_left = 8-6 = 2 = 闸值
+        re_, te_ = _reason_and_tool(
+            LeaderTerminationHooks(
+                conclusion_tool="fact_issue_ruling",
+                expected_partners=2,
+                followup_rounds=1,
+            )._decide(e_ctx)
+        )
+        goode = (re_, te_) == ("followup-offer", None)
+        if not goode:
+            ok = False
+        print(
+            f"  [{'通过' if goode else '失败'}] 追问轮 · 余量=闸值(2) 必须 offer："
+            f"reason={re_}（降闸的正向断言，防空转）"
         )
 
         # ⑥ 拿不到步号（幂等闸立不起来）⇒ 保守不 offer

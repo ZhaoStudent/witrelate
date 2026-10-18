@@ -660,9 +660,10 @@ class LeaderTerminationHooks(WitHooks):
         ⚠️ 状态挂在 `ctx.private_state`（每轮 run 新建，跨 run 零泄漏），
         同一步内 `context()` / `wrap_model_call()` 会各调一次 `_decide`，
         幂等闸靠步号钉住 —— 见 `_maybe_followup`。
-        ⚠️ 预算闸：追问闭环本身要吃 3 步（发追问 → 等结果 → 交交付物），
-        步数余量不足时**宁可不给机会也不 offer**，「output/ 一定有文件」
-        的承诺优先于追问。服务模式 `max_steps=8` 钉死，余量按现场派生。
+        ⚠️ 预算闸：追问闭环本身要吃步数，余量不足时**宁可不给机会也不
+        offer**，「output/ 一定有文件」的承诺优先于追问。服务模式
+        `max_steps=8` 钉死，余量按现场派生（2026-10-18 真机实证：回齐时
+        常态只剩 2 步，故闸值由 3 降为 2，用户拍板）。
     verbose
         把每次强制决策打到 stderr。
     """
@@ -753,9 +754,11 @@ class LeaderTerminationHooks(WitHooks):
 
     # -- 追问轮（可选）------------------------------------------------------
 
-    #: 追问闭环的最小步数余量：发追问委派 1 步 + 等追问结果 1 步 + 交交付物 1 步。
-    #: 余量不足时宁可不 offer —— 交付物承诺优先于追问机会。
-    FOLLOWUP_MIN_STEPS_LEFT = 3
+    #: 追问闭环的最小步数余量（2026-10-18 用户拍板由 3 降为 2）：
+    #: 2 = 发追问委派 1 步 + 取结果/交交付物 1 步（最后一步由 partners-ready
+    #: 或 budget-guard 锁定交裁定）。代价：若最后一步追问未回，裁定会缺追问
+    #: 结果——链路不塌，只是少一条信息。真机实证见手册 §22.3。
+    FOLLOWUP_MIN_STEPS_LEFT = 2
 
     _FOLLOWUP_OFFERED_KEY = "termination.followup_offered"
     _FOLLOWUP_DELEGATIONS_KEY = "termination.followup_delegations"
