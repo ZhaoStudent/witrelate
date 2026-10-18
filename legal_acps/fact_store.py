@@ -271,3 +271,120 @@ class FactStore:
 
     def __iter__(self) -> Iterator[Fact]:
         return iter(self.facts)
+
+
+# ═════════════════════════════════════════════════════════════════════════
+# 媒体核验记录（2026-10-18 方案②）：证据鉴证链的核验结论 → 可检索的一手材料
+# ═════════════════════════════════════════════════════════════════════════
+#
+# 证据鉴证链（evidence-leader → 模态叶子）此前的产出**只进 output/ 报告文件**，
+# 与事实核查链（fact-judge）唯一的连接点是用户自己把两边结论抄到一起。
+# 本节把每份鉴证报告同时归档成一条事实库记录：之后**任何**文本研判（裁判受理
+# `arbitrate_claim` 的检索、快车道 `decide_lane` 的对齐层）都能检索到
+# 「同一媒体材料的既往核验结论」—— 真实谣言生态里"同一张旧图反复配新说法"
+# 极常见，这正是它的用武之地。
+#
+# ⚠️ 检索命中的形态：记录 title/body 携带 `subject`（材料说明，含案情上下文）
+#    的自然语言 ⇒ 文本查询能按词项匹配到它；url 是 `evidence://` 合成溯源键
+#    （本系统核验没有网页 url，溯源指向本地报告文件与媒体指纹，不冒充网页）。
+#
+# 🔴 安全闸（这是本节最重要的一段）：快车道对齐层 `official_confirms` 的判据是
+#    FALSE_PAT（「不实」系定性词）± 窗口对齐——一条正文里带定性词的核验记录，
+#    会让之后**同事件的文本研判被快车道直接判「不实」、跳过辩论**。证据链的
+#    铁律"只给线索、不断言真伪"约束的是模型提示词；这里是**代码层**兜底：
+#    渲染出的正文撞上 FALSE_PAT ⇒ 这条记录**绝不落库**（`render` 返回 None 并
+#    报出撞上的模式）。静默写进去 = 静默给安全结论，本库最忌讳的失败形态。
+# ═════════════════════════════════════════════════════════════════════════
+
+#: 核验记录 url 前缀。url 同时是去重键（纪律 4）：同一媒体（同 sha256）复检
+#: ⇒ 同 url ⇒ `load` 时新记录顶旧记录；拿不到指纹的报告各占一条（report/<stamp>）。
+EVIDENCE_URL_PREFIX = "evidence://"
+
+#: 运行时核验记录的落库文件（GLOB `raw-*.jsonl` 天然能读到它）。
+EVIDENCE_LIVE_FILE = "raw-evidence-live.jsonl"
+
+
+def render_evidence_record(ruling: dict) -> tuple[dict | None, list[str]]:
+    """把一份 ``EvidenceRuling``（dict 形态）渲染成事实库记录。
+
+    返回 ``(record, refused_patterns)``：
+    · record 非空、refused 为空  ⇒ 可落库；
+    · record 为 None、refused 非空 ⇒ **拒绝入库**（正文撞上 FALSE_PAT 安全闸），
+      refused 里是撞上的模式原文，调用方必须如实报出、不许静默吞掉。
+    """
+    from datetime import datetime, timezone
+
+    from .lead_store import FALSE_PAT  # 局部 import：避免模块级环
+
+    subject = str(ruling.get("subject") or "").strip()
+    modality = str(ruling.get("modality") or "").strip() or "未知模态"
+    suspicion = str(ruling.get("suspicion") or "").strip() or "无法判定"
+    sha = str(ruling.get("sha256") or "").strip()
+    conclusion = str(ruling.get("conclusion") or "").strip()
+    findings = ruling.get("findings") or []
+    not_run = ruling.get("not_run") or []
+
+    clue_lines: list[str] = []
+    for f in findings:
+        if not isinstance(f, dict):
+            continue
+        check = str(f.get("check") or "").strip()
+        detail = str(f.get("detail") or "").strip()
+        caveat = str(f.get("caveat") or "").strip()
+        head = detail or check  # detail 是人话（check 只是 exif/ela 这类标识符）
+        if head:
+            clue_lines.append(
+                f"· {head}" + (f"（caveat：{caveat}）" if caveat else "")
+            )
+
+    body = (
+        f"本系统证据鉴证链核验记录。材料说明：{subject}。模态：{modality}。"
+        f"综合线索等级：{suspicion}（线索等级不是伪造概率，不能单独作为真伪结论）。"
+        f"技术线索：{'；'.join(clue_lines) if clue_lines else '（无）'}。"
+        f"未执行的检查项：{'；'.join(str(x) for x in not_run) if not_run else '（无）'}。"
+        f"综合说明：{conclusion}。"
+        + (f"文件指纹 sha256：{sha}。" if sha else "")
+        + "本记录是系统核验留痕（一手材料），不是权威定性结论。"
+    )
+    # 🔴 安全闸只查 **body**：`official_confirms` 的对齐判定只读 fact.body，
+    #    title 不进对齐窗口。查 title 会把"用户主张原文里带『谣言』二字"的
+    #    合法记录也拒掉（subject 常引用主张原文），白丢记录。
+    refused = sorted({m.group() for m in FALSE_PAT.finditer(body)})
+    if refused:
+        return None, refused
+
+    now = datetime.now(timezone.utc)
+    stamp = now.strftime("%Y%m%dT%H%M%SZ")
+    url = (
+        f"{EVIDENCE_URL_PREFIX}sha256/{sha}"
+        if sha
+        else f"{EVIDENCE_URL_PREFIX}report/{stamp}"
+    )
+    record = {
+        "source_key": "evidence",
+        "publisher": "本系统·证据鉴证链",
+        "origin_publisher": "本系统·证据鉴证链（evidence-leader）",
+        "level": "一手材料",
+        "title": f"媒体核验记录：{subject[:60]}（{modality}，线索等级{suspicion}）",
+        "url": url,
+        "published": now.date().isoformat(),
+        "body": body,
+        "fetched_at": stamp,
+    }
+    return record, []
+
+
+def append_evidence_record(record: dict, *, root: Path | None = None) -> dict:
+    """把一条核验记录追加进事实库目录。旁路纪律：**失败不挡调用方主流程**，
+    结果永远结构化（status ∈ written / error + 原因）。"""
+    out: dict = {"status": "written", "url": str(record.get("url") or ""), "reason": ""}
+    try:
+        d = Path(root) if root is not None else FACTS_DIR
+        d.mkdir(parents=True, exist_ok=True)
+        path = d / EVIDENCE_LIVE_FILE
+        with path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception as exc:  # noqa: BLE001 —— 旁路：如实记失败，不挡报告交付
+        out["status"] = "error"
+        out["reason"] = f"{type(exc).__name__}: {exc}"
+    return out

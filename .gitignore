@@ -22,3 +22,6 @@ logs/
 
 # WorkBuddy 工作区数据（自动化脚本/运行日志，非代码）
 .workbuddy/
+
+# 运行时媒体核验记录（方案②落库产物，含用户主张原文，同 output/ 口径不进公库）
+legal_acps/facts/raw-evidence-live.jsonl

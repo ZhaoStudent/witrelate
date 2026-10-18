@@ -850,6 +850,166 @@ def _check_fact_store(ok: bool) -> bool:
               f"{len(got_rel)} 条、不相关与纯转述查询返回空（闸门分得开）；"
               f"溯源字段齐全；加载如实记账丢弃/去重数；同 URL 不重复；"
               f"受理接线带回案底 {len(mats)} 条；空库/空查询不造事实")
+
+    # ── (8) 媒体核验记录（方案②，2026-10-18）：证据链结论 → 可检索的一手材料 ──
+    #        断言链：渲染形态 → FALSE_PAT 安全闸（负对照）→ 真库副本+长查询
+    #        命中过阈值（生产保真度）→ 快车道双断言（正对照防空转）→
+    #        同指纹去重 → issue_evidence_report 真接线（注入式）→ ① 提示词接线。
+    import shutil as _shutil
+
+    from legal_acps.contracts import EvidenceRuling as _EvRuling
+    from legal_acps.evidence.contracts import Finding as _Finding
+    from legal_acps.fast_lane import official_confirms as _official_confirms
+
+    ev_ruling: dict = {
+        "subject": "网传某商场促销现场踩踏的配图（用户主张原文：商场为压消息删了视频）",
+        "modality": "图像",
+        "suspicion": "高",
+        "sha256": "e" * 64,
+        "conclusion": "多项线索提示该图经过复制-移动编辑与重压缩，建议线下复检。",
+        "findings": [
+            {"check": "copy_move", "detail": "检出复制-移动区域 Δ=(312,0)",
+             "caveat": "该线索不能证明整图为合成"},
+        ],
+        "not_run": ["EXIF 已被剥离"],
+    }
+
+    # (8a) 正常形态：可渲染、level=一手材料、url 指纹溯源键、溯源字段齐全
+    rec, refused = fs.render_evidence_record(ev_ruling)
+    if rec is None or refused:
+        print(f"  [失败] 核验记录渲染被拒（refused={refused}）⇒ 合法线索记录进不了库")
+        ok, bad = False, bad + 1
+    elif not (rec["url"] == f"{fs.EVIDENCE_URL_PREFIX}sha256/{'e' * 64}"
+              and rec["level"] == "一手材料"
+              and rec["origin_publisher"] and rec["published"]):
+        print(f"  [失败] 核验记录形态不对：level={rec['level']!r} url={rec['url'][:40]!r}"
+              " ⇒ 等不到裁判按 level 分流就先被当成了无法溯源的东西")
+        ok, bad = False, bad + 1
+
+    # (8b) FALSE_PAT 安全闸（负对照）：conclusion 混入定性词 ⇒ 拒绝入库并报出模式
+    poisoned = dict(ev_ruling)
+    poisoned["conclusion"] = ev_ruling["conclusion"] + "经核查该图系编造的谣言。"
+    rec2, refused2 = fs.render_evidence_record(poisoned)
+    if rec2 is not None or not refused2:
+        print("  [失败] 核验记录安全闸没拦：带定性词的正文照常入库"
+              " ⇒ 之后同事件文本研判会被快车道直接判「不实」、跳过辩论")
+        ok, bad = False, bad + 1
+
+    # (8c) 生产保真度：真库副本 + 长查询（受理检索的真实形态）⇒ 命中且过阈值。
+    #      ⚠️ 必须用真库副本：temp 小库 df=1 折扣会把分数打崩（实测 2.29），
+    #         而「落库后能不能被生产检索捞到」恰恰取决于真库的 df 结构。
+    if rec is not None:
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            for p in fs.FACTS_DIR.glob("raw-*.jsonl"):
+                _shutil.copy(p, d / p.name)
+            fs.append_evidence_record(rec, root=d)
+            store_ev, rep_ev = fs.FactStore.load(d)
+            q_long = ("家族群里都在传一张现场照片，说某商场促销活动现场发生踩踏，"
+                      "有人被踩伤送医，商场为了压消息把现场视频都删了。"
+                      "这张照片是不是真的？这件事是真的吗？")
+            hits_ev = store_ev.search(q_long)
+            ev_hit = next((h for h in hits_ev
+                           if h.fact.url.startswith(fs.EVIDENCE_URL_PREFIX)), None)
+            if ev_hit is None:
+                print(f"  [失败] 核验记录落库后检索不到（真库副本 top{len(hits_ev)} 里没有）"
+                      " ⇒ 方案②的复利通道空转：记录在库里、裁判永远看不见")
+                ok, bad = False, bad + 1
+            elif ev_hit.score < fs.MIN_SCORE:
+                print(f"  [失败] 核验记录命中分数 {ev_hit.score:.2f} < 阈值 {fs.MIN_SCORE}"
+                      " ⇒ 过不了 search 的门，等于没检索到")
+                ok, bad = False, bad + 1
+
+    # (8d) 快车道双断言：正对照（毒正文 inline 事件词 ⇒ 闸门能响，防空转）
+    #      + 真记录正文 ⇒ 闸门不响（结构上不可能触发「不实」快裁）。
+    _ev_event = "网传某商场促销现场踩踏"
+    poison_inline = "关于某商场促销活动现场踩踏的传闻，经核查系编造的谣言。"
+    if not _official_confirms(_ev_event, poison_inline):
+        print("  [失败] 快车道对齐层的正对照没响：毒正文（事件词+定性词同窗）"
+              "都不触发 ⇒ (8d) 的负断言在空转，安全闸根本没被验证")
+        ok, bad = False, bad + 1
+    if rec is not None and _official_confirms(_ev_event, rec["body"]):
+        print("  [失败] 核验记录正文竟能触发快车道对齐 ⇒ 「线索」获得了"
+              "「权威定性」的判定力，快车道会被一条技术线索劫持")
+        ok, bad = False, bad + 1
+
+    # (8e) 同指纹去重：同一媒体复检 ⇒ load 只留最新一份（纪律 4 的行为版）
+    if rec is not None:
+        with tempfile.TemporaryDirectory() as td:
+            d = Path(td)
+            fs.append_evidence_record(rec, root=d)
+            rec_newer = dict(rec)
+            rec_newer["body"] = rec["body"] + "（复检更新：线索等级不变。）"
+            rec_newer["fetched_at"] = "99991231T235959Z"
+            fs.append_evidence_record(rec_newer, root=d)
+            s_dup, r_dup = fs.FactStore.load(d)
+            evs = [f for f in s_dup if f.url.startswith(fs.EVIDENCE_URL_PREFIX)]
+            if len(evs) != 1 or r_dup.deduped != 1:
+                print(f"  [失败] 核验记录同指纹去重失效：{len(evs)} 条（deduped="
+                      f"{r_dup.deduped}）⇒ 同一媒体复检一次库里翻一倍，"
+                      "检索 top-N 被自家人挤占")
+                ok, bad = False, bad + 1
+            elif "复检更新" not in evs[0].body:
+                print("  [失败] 核验记录去重留错了快照：保住了旧的那份"
+                      " ⇒ 复检结论永远更新不进去")
+                ok, bad = False, bad + 1
+
+    # (8f) issue_evidence_report 真接线（注入式）：报告落盘 + 记录落库同轮发生；
+    #      毒 conclusion ⇒ 记录 refused 但报告照常交付（旁路纪律）。
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        _orig_out, _orig_facts = _ag.OUTPUT_DIR, fs.FACTS_DIR
+        _ag.OUTPUT_DIR, fs.FACTS_DIR = d, d
+        try:
+            good_ruling = _EvRuling(
+                subject=ev_ruling["subject"], modality="图像", suspicion="高",
+                sha256="f" * 64,
+                conclusion=ev_ruling["conclusion"],
+                reasoning="两项线索（复制-移动区域、压缩历史）共同指向等级「高」；"
+                          "EXIF 一项未跑，已在 not_run 点名。",
+                findings=[_Finding(check="copy_move", verdict="提示异常",
+                                   detail="检出复制-移动区域",
+                                   caveat="该线索不能证明整图为合成")],
+                not_run=["EXIF 已被剥离"],
+            )
+            got_rep = _ag.issue_evidence_report(good_ruling)
+            live = d / fs.EVIDENCE_LIVE_FILE
+            fr = got_rep.get("fact_record") or {}
+            if fr.get("status") != "written" or not live.exists():
+                print(f"  [失败] 鉴证报告落库接线断了：fact_record={fr}"
+                      f"、库文件存在={live.exists()} ⇒ 报告照写、复利通道没接上"
+                      "（「装了 ≠ 会响」的接线版）")
+                ok, bad = False, bad + 1
+            bad_ruling = good_ruling.model_copy(
+                update={"conclusion": "经核查该图系编造的谣言。"})
+            got_rep2 = _ag.issue_evidence_report(bad_ruling)
+            fr2 = got_rep2.get("fact_record") or {}
+            if fr2.get("status") != "refused" or "saved_to" not in got_rep2:
+                print(f"  [失败] 毒报告的双路走反了：fact_record={fr2}、"
+                      f"报告交付={'saved_to' in got_rep2} ⇒ 要么闸没拦、"
+                      "要么闸拦了把主交付也拦了（旁路纪律被违反）")
+                ok, bad = False, bad + 1
+        finally:
+            _ag.OUTPUT_DIR, fs.FACTS_DIR = _orig_out, _orig_facts
+
+    # (8g) ① 提示词接线（artifact 级）：组合研判分支上了主控提示词、
+    #      evidence:// 分流上了裁判提示词 —— 真机行为由 run/e2e_combined 验证。
+    _leader_ins = BUILDERS["leader"](DUMMY_MODEL).instructions
+    _judge_ins = BUILDERS["fact-judge"](DUMMY_MODEL).instructions
+    if "组合研判分支" not in _leader_ins or "必须并发派出" not in _leader_ins:
+        print("  [失败] 主控提示词缺组合研判分支（或丢了并发派出约束）"
+              " ⇒ 媒体+主张的输入会只走单边，①的缝合没接上")
+        ok, bad = False, bad + 1
+    if "evidence://" not in _judge_ins or "一手材料" not in _judge_ins:
+        print("  [失败] 裁判提示词缺 level 分流 ⇒ 检索到的核验记录会被当成"
+              "官方通报引用（线索被当成定性）")
+        ok, bad = False, bad + 1
+
+    if not bad:
+        print("  [通过] 媒体核验记录（方案②）：渲染形态/安全闸（负对照拦得住）/"
+              "真库副本长查询命中过阈值/快车道双断言（正对照响+记录不响）/"
+              "同指纹去重留最新/报告-落库同轮接线（毒报告只拒库不拒交付）/"
+              "①②提示词接线齐全")
     return ok
 
 
@@ -6049,6 +6209,7 @@ def check_provenance() -> bool:
         _before = {m for m in _HEAVY if m in _sys.modules}
         try:
             from run import e2e_audio_live as probe_aud
+            from run import e2e_combined as probe_comb
             from run import e2e_fast_lane as probe_fast
             from run import e2e_lead_intake as probe_lead
             from run import e2e_leader_image as probe_img
@@ -6058,7 +6219,8 @@ def check_provenance() -> bool:
             print(f"  [失败] 无法 import 真机探针（{type(exc).__name__}: {exc}）"
                   " ⇒ 本节只能作罢，而'静态检查'证明不了'运行时真会走那条路'。"
                   "最常见原因：不在仓库根目录下跑自检（探针按 `run.<模块>` 导入）")
-            probe_img = probe_vid = probe_aud = probe_lead = probe_fast = probe_swap = None
+            probe_img = probe_vid = probe_aud = probe_lead = probe_fast = probe_swap \
+                = probe_comb = None
             ok = False
         _leaked = sorted({m for m in _HEAVY if m in _sys.modules} - _before)
         if _leaked:
@@ -6072,6 +6234,10 @@ def check_provenance() -> bool:
         #:    只会替"这一轮记到了别人的文件里"背书。
         _PROBES: list[tuple[str, object, str, bool]] = [
             ("run/e2e_audio_live.py", probe_aud, "leader", True),
+            # 组合研判（#170–#173）：主控带图+文字主张两链并发。跑 **leader**
+            # （fact-judge / evidence-leader 走常驻服务），预算用 research 的
+            # 14 步（组合分支 = 2 discover + 2 delegate + 等待 + 交付）⇒ needs_config=True。
+            ("run/e2e_combined.py", probe_comb, "leader", True),
             ("run/e2e_fast_lane.py", probe_fast, "leader", True),
             ("run/e2e_lead_intake.py", probe_lead, "leader", True),
             ("run/e2e_leader_image.py", probe_img, "leader", True),
