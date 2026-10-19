@@ -1,6 +1,6 @@
-"""元验证：功能④（信息分区）的 ⑦-13 判据退回旧形态后必须报失败。
+"""元验证：功能④（信息分区+教学话术）的 ⑦-13 判据退回旧形态后必须报失败。
 
-三锚（old/new 互不为子串；锚点全文唯一；跑法 = 字节级替换后单节跑
+五锚（old/new 互不为子串；锚点全文唯一；跑法 = 字节级替换后单节跑
 check_local._check_experience_partition，判据 = 输出里出现 [失败] 行）：
 
   A 隔离墙退回：build_deceiver_fact_section 把指控方视图换成当事人视图
@@ -9,6 +9,10 @@ check_local._check_experience_partition，判据 = 输出里出现 [失败] 行�
     ⇒ 有分区也走旧 JSON 路径 ⇒ 必须红「缺 shared/theirs」。
   C 相位机退回：session.start 的 `if followup:` 改 False
     ⇒ 受理官追问被无视、直接开辩 ⇒ 必须红「没暂停开辩」。
+  D 教学指令段退回：build_reveal_prompt 不再附 `_teaching_section`
+    ⇒ 裁判拿不到教学任务 ⇒ 必须红「缺「信息差教学」段」（2026-10-19）。
+  E 板块注入退回：session.reveal 的 info_gap_review 恒 None
+    ⇒ 前端拿不到板块数据 ⇒ 必须红「没带 info_gap_review」（2026-10-19）。
 
 写成文件而不是 heredoc：Bash 工具会吃掉字节串里的转义（见
 run/meta_verify_fixes.py 顶部说明）。🔴 元验证永远后台跑，窗口内禁 scp
@@ -104,6 +108,32 @@ try:
     assert syntax_ok(p_sess), "退回后的 session.py 语法不正确 —— 元验证无效！"
     badC = failed(section13(), ["没暂停开辩"])
     report.append(("session.py · followup 相位机失灵（追问被无视）", bool(badC), badC))
+finally:
+    p_sess.write_bytes(orig_sess)
+
+# ---------- D 教学指令段退回：揭示输入不再教裁判用三桶（2026-10-19 教学话术） ----------
+oldD = b'        partition_section = full + "\\n\\n" + _teaching_section(case)'
+newD = b'        partition_section = full + "\\n\\n"  # deliberately broken'
+assert orig_part.count(oldD) == 1, f"锚 D 不唯一：{orig_part.count(oldD)}"
+assert oldD not in newD and newD not in oldD, "锚 D old/new 互为子串"
+try:
+    p_part.write_bytes(orig_part.replace(oldD, newD))
+    assert syntax_ok(p_part), "退回后的 partition.py 语法不正确 —— 元验证无效！"
+    badD = failed(section13(), ["缺「信息差教学」段"])
+    report.append(("partition.py · 教学指令段被裁（裁判拿不到教学任务）", bool(badD), badD))
+finally:
+    p_part.write_bytes(orig_part)
+
+# ---------- E 板块注入退回：reveal 结果不再带信息差复盘数据 ----------
+oldE = b'            "info_gap_review": build_info_gap_review(case),'
+newE = b'            "info_gap_review": None,  # deliberately broken'
+assert orig_sess.count(oldE) == 1, f"锚 E 不唯一：{orig_sess.count(oldE)}"
+assert oldE not in newE and newE not in oldE, "锚 E old/new 互为子串"
+try:
+    p_sess.write_bytes(orig_sess.replace(oldE, newE))
+    assert syntax_ok(p_sess), "退回后的 session.py 语法不正确 —— 元验证无效！"
+    badE = failed(section13(), ["没带 info_gap_review"])
+    report.append(("session.py · info_gap_review 注入被拆（前端拿不到板块）", bool(badE), badE))
 finally:
     p_sess.write_bytes(orig_sess)
 

@@ -37,6 +37,7 @@ from ..contracts import group_fallacies
 from .opening import inspect_case
 from .partition import (
     build_deceiver_prompt,
+    build_info_gap_review,
     build_opening_prompt,
     build_reveal_prompt,
     has_partition,
@@ -497,6 +498,11 @@ class ExperienceSession:
         self.state.reveal = {
             **judge_out,
             "rounds": self.state.pro_rounds,
+            # 信息差复盘板块（2026-10-19 教学话术）：**服务端纯函数**算，
+            # 不依赖裁判 —— 三桶对照与概念句是固定教学文案；无分区 ⇒ None
+            # ⇒ 前端不渲染（零变化）。裁判的增值在 summary/hot_spots/advice
+            # （教学指令段已随揭示输入发给它）。
+            "info_gap_review": build_info_gap_review(case),
             # ⚠️ 分层的**输入**按裁判有没有交回结论来选：
             #    · 裁判交回了 → 用它汇总的那份（它读过全场，比逐轮自曝更完整）；
             #    · 裁判没交回（降级）→ 用**诱导方逐轮自曝的原始记录**。

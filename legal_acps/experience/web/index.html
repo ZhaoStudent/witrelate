@@ -375,11 +375,31 @@ function renderReveal(r) {
   //    文案只有服务端那一份（`r.summary`），前端不另抄一遍措辞。
   const degraded = r.judge_ok === false;
   const summary = r.summary ? '<div class="banner">' + esc(r.summary) + '</div>' : '';
+  // 信息差复盘板块（功能④教学话术）。数据由服务端纯函数算（三桶对照 +
+  // 概念句固定文案），前端只渲染 —— 口径不抄第二份：概念句原文来自服务端
+  // （r.info_gap_review.*_note），标题也是（r.info_gap_review.title）。
+  // 无分区 / 旧会话 ⇒ 该键为 null ⇒ 不渲染（零变化）。
+  const ig = r.info_gap_review;
+  let gapHtml = '';
+  if (ig) {
+    const bucket = (title, items, note) =>
+      '<div class="meta" style="margin-top:12px">' + esc(title) + '</div>' +
+      ((items || []).length
+        ? '<ul class="plain">' + items.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>'
+        : '<div class="hint">（这一桶受理时是空的）</div>') +
+      '<div class="hint">' + esc(note) + '</div>';
+    gapHtml =
+      '<div class="banner" style="margin-top:16px">' + esc(ig.title) + '</div>' +
+      bucket('公开战场 · 双方都知道', ig.shared, ig.shared_note) +
+      bucket('对方的牌 · 他声称有、你没见过', ig.theirs, ig.theirs_note) +
+      bucket('你的底牌 · 只有你知道', ig.mine, ig.mine_note);
+  }
   $('revealBox').innerHTML =
     '<h2>复盘 · 他刚才是这样编排你的</h2>' +
     (degraded ? summary.replace('class="banner"', 'class="banner top"') : '') +
     '<div class="hint">本局共交锋 ' + (r.rounds ?? 0) + ' 轮</div>' +
     traps +
+    gapHtml +
     suspectHtml +
     (hot ? '<div class="meta" style="margin-top:12px">最容易带偏你的地方</div><ul class="plain">' + hot + '</ul>' : '') +
     (solid ? '<div class="meta" style="margin-top:12px">你这几句是站得住的</div><ul class="solid">' + solid + '</ul>' : '') +

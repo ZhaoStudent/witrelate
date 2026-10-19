@@ -20,7 +20,11 @@
       那条含 theirs 哨兵（转账）——指控方连自己声称的材料都拿不到，
       信息差话术就没法围绕它构建。
   P3｜揭示带三桶：case.reveal 输入含「信息分区」段标题 + mine 哨兵
-      （裁判中立，三桶全貌必须在场——与 P2 恰好互为反面）。
+      （裁判中立，三桶全貌必须在场——与 P2 恰好互为反面）；且含
+      「信息差教学」指令段（裁判要会把概念落到原话，2026-10-19 教学话术）。
+  P5｜信息差复盘板块落进 reveal 结果：state.reveal.info_gap_review 是
+      结构化数据（三桶原文 + 三条概念句），由**服务端纯函数**算——
+      即便裁判降级（judge_ok=false）板块也必须在（教学不依赖模型）。
   P4｜可选追问相位机（条件判据，两条路都合法）：
       · followup 非空 ⇒ 必须停在 awaiting_details、此时辩白被拒（409）、
         give_details 的补充文本必须进第二次受理输入、且新分区的 mine
@@ -167,12 +171,31 @@ async def run_probe() -> int:
     reveal_prompt = next((p for t, p in log if t == "case.reveal"), "")
     p3 = ("信息分区" in reveal_prompt
           and BUCKET_LABELS["mine"] in reveal_prompt
-          and any(s in reveal_prompt for s in MINE_SENTINELS))
-    results.append(("P3 揭示带三桶全貌", p3,
+          and any(s in reveal_prompt for s in MINE_SENTINELS)
+          and "信息差教学" in reveal_prompt)
+    results.append(("P3 揭示带三桶全貌+教学指令段", p3,
                     f"段标题{'✓' if '信息分区' in reveal_prompt else '✗'}"
                     f" mine 桶{'✓' if BUCKET_LABELS['mine'] in reveal_prompt else '✗'}"
                     f" mine 哨兵"
-                    f"{'✓' if any(s in reveal_prompt for s in MINE_SENTINELS) else '✗'}"))
+                    f"{'✓' if any(s in reveal_prompt for s in MINE_SENTINELS) else '✗'}"
+                    f" 教学段"
+                    f"{'✓' if '信息差教学' in reveal_prompt else '✗'}"))
+
+    # P5 信息差复盘板块（服务端纯函数算，教学不依赖模型）
+    rev = session.state.reveal or {}
+    ig = rev.get("info_gap_review")
+    from legal_acps.experience import partition as _xp
+    p5 = isinstance(ig, dict) and ig.get("title") == _xp.INFO_GAP_TITLE \
+        and any(s in str(ig.get("mine") or []) for s in MINE_SENTINELS) \
+        and THEIRS_SENTINEL in str(ig.get("theirs") or []) \
+        and _xp.INFO_GAP_CLAIM_NOTE in str(ig.get("theirs_note")) \
+        and _xp.INFO_GAP_CARD_NOTE in str(ig.get("mine_note")) \
+        and _xp.INFO_GAP_FIELD_NOTE in str(ig.get("shared_note"))
+    results.append(("P5 信息差复盘板块（服务端固定文案）", p5,
+                    f"judge_ok={rev.get('judge_ok')}；板块标题"
+                    f"{'✓' if isinstance(ig, dict) and ig.get('title') == _xp.INFO_GAP_TITLE else '✗'}"
+                    f" 三桶原文{'✓' if isinstance(ig, dict) and any(s in str(ig.get('mine') or []) for s in MINE_SENTINELS) else '✗'}"
+                    f" 概念句{'✓' if isinstance(ig, dict) and _xp.INFO_GAP_CLAIM_NOTE in str(ig.get('theirs_note')) else '✗'}"))
 
     # P4 收尾：追问路径 = 补充触发了第二次受理（前置已挡失败）；免问路径 =
     # start 直接开辩没停在追问相位。附加硬条件就地收进判据。

@@ -34,6 +34,38 @@ BUCKET_LABELS = {
     "theirs": "指控方声称掌握、当事人没见过的材料（只是声称，未必存在）",
 }
 
+# ── 信息差教学概念（2026-10-19 功能④收尾：教学话术）────────────────────
+#
+# 三个概念是**教学设计**（固定文案，不是模型的自由发挥）：
+# 概念句只定义在本模块这一处 —— 复盘板块渲染、裁判教学指令的关键词、
+# check_local 判据全部引用这里（与 BUCKET_LABELS 同一条单一来源纪律）。
+# 模型的职责不是复述概念，而是把它们**落到当事人这局的原话与选择上**
+# （见 build_reveal_prompt 的教学指令段）。
+
+#: 复盘板块标题（判据哨兵之一）。
+INFO_GAP_TITLE = "信息差复盘 · 这局真正的胜负手"
+
+#: theirs 桶教学点：声称 ≠ 证据（指控方"手里有材料"只是声称）。
+INFO_GAP_CLAIM_NOTE = (
+    "对方嘴里的「我手里有材料」从头到尾只是一句声称——"
+    "声称不等于证据，一直拿不出来就等于没有。他越是不肯亮、"
+    "越是用「你心虚什么」反问施压，越说明手里没货。"
+)
+
+#: mine 桶教学点：你其实有牌（自己的实情是底牌，先盘牌再决定亮不亮）。
+INFO_GAP_CARD_NOTE = (
+    "这几条只有你自己知道——你其实一直有牌。被指控时先盘一遍"
+    "「我知道什么、他知道什么、大家都能看见什么」，再决定亮哪张、"
+    "按住哪张；这一局你没亮不是错，但下次要知道自己手里有什么。"
+)
+
+#: shared 桶教学点：公共战场（把争论拉回双方都看得见的信息、举证责任在指控方）。
+INFO_GAP_FIELD_NOTE = (
+    "双方都看得见的信息才是公共战场。把争论拉回这里、"
+    "要求对方把「声称的材料」摆上桌面，比你自己拼命自证有效得多——"
+    "举证责任在指控的人，不在你。"
+)
+
 
 def _partition_of(case: Mapping[str, Any]) -> InfoPartition | None:
     """从 case dict 里取分区；取不到或全空 ⇒ None（= 走零变化老路）。"""
@@ -177,6 +209,53 @@ def build_deceiver_prompt(
     )
 
 
+def build_info_gap_review(case: Mapping[str, Any]) -> dict[str, Any] | None:
+    """信息差复盘板块的**结构化数据**（给前端，由服务端算——不依赖裁判）。
+
+    为什么这块是固定文案而不是让裁判写：三桶对照与三个概念是**教学设计**
+    （哪些是事实、概念句怎么措辞，教学侧已经定死）；让模型复述确定性
+    事实既浪费又有幻觉风险。裁判的增值部分在 summary / hot_spots / advice
+    ——把概念**落到当事人这局的原话上**（教学指令段在 build_reveal_prompt）。
+
+    无分区 ⇒ None（前端不渲染 = 零变化）。"""
+    part = _partition_of(case)
+    if part is None:
+        return None
+    return {
+        "title": INFO_GAP_TITLE,
+        "shared": [t for t, _ in (_item_texts(it) for it in part.shared) if t],
+        "theirs": [t for t, _ in (_item_texts(it) for it in part.theirs) if t],
+        "mine": [t for t, _ in (_item_texts(it) for it in part.mine) if t],
+        "theirs_note": INFO_GAP_CLAIM_NOTE,
+        "mine_note": INFO_GAP_CARD_NOTE,
+        "shared_note": INFO_GAP_FIELD_NOTE,
+    }
+
+
+def _teaching_section(case: Mapping[str, Any]) -> str:
+    """裁判输入里的信息差教学指令段（有分区才出现）。
+
+    概念关键词从上面的常量引用（单一来源：模型的教学口径与复盘页固定
+    文案不会各说各话）。哨兵 = 段标题「信息差教学」。"""
+    part = _partition_of(case)
+    if part is None:
+        return ""
+    return (
+        "═══ 信息差教学（本局三桶分区的用法）═══\n"
+        "本局存在信息不对称，这是复盘的必修素材。复盘页会展示固定文案，"
+        "你不必逐字复述概念；你的任务是把这些概念**落到当事人这局的原话"
+        "与选择上**：\n"
+        "- 指控方声称掌握、当事人没见过的材料（theirs 桶）：在 hot_spots 里"
+        "点明当事人有没有把「声称」当成「证据」——例如被「我手里有记录」"
+        "吓得急着自证，而不是要求对方亮出来。\n"
+        "- 只有当事人知道的部分（mine 桶）：在 summary 里替他盘点「他其实"
+        "有牌」，并结合他实际亮没亮（没亮不是错，但要知道自己有）。\n"
+        "- 双方都知道的部分（shared 桶）：advice 至少一条教他把争论拉回"
+        "公共战场——把举证责任还给指控方（要求对方先亮声称的材料，"
+        "而不是自己拼命自证）。\n\n"
+    )
+
+
 def build_reveal_prompt(
     case: Mapping[str, Any],
     transcript: str,
@@ -190,7 +269,8 @@ def build_reveal_prompt(
     partition_section = ""
     full = render_full_partition(case)
     if full:
-        partition_section = full + "\n\n"
+        # 三桶全貌在前（事实），教学指令在后（怎么用这份事实教学）。
+        partition_section = full + "\n\n" + _teaching_section(case)
     return (
         "═══ 本局命题 ═══\n"
         f"{case.get('proposition', '（未给出）')}\n\n"
@@ -233,8 +313,10 @@ def build_opening_prompt(case: Mapping[str, Any]) -> str:
 
 __all__ = [
     "BUCKET_LABELS",
+    "INFO_GAP_TITLE",
     "build_deceiver_fact_section",
     "build_deceiver_prompt",
+    "build_info_gap_review",
     "build_opening_prompt",
     "build_reveal_prompt",
     "has_partition",

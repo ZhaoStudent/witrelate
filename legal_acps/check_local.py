@@ -2324,6 +2324,9 @@ def _check_experience_partition(ok: bool) -> bool:
               "（本次改造对揭示的最低要求就是『带上三桶』）")
     if "信息分区" in xp.build_reveal_prompt(case_plain, "交锋Z", "[]"):
         _fail("零变化：无分区时揭示输入混进了「信息分区」段 ⇒ 旧形态被改")
+    if "信息差教学" in xp.build_reveal_prompt(case_plain, "交锋Z", "[]"):
+        _fail("零变化：无分区时揭示输入混进了教学指令段 ⇒ 旧形态被改"
+              "（教学话术只对有分区的局生效）")
 
     # ── (4) 相位机（forge _run 的会话级行为断言）─────────────────────
     # 🔴 夹具纪律：下面的会话级断言找的是 A1/B7/C3 三个标记，所以 forge 的
@@ -2375,6 +2378,38 @@ def _check_experience_partition(ok: bool) -> bool:
     elif "声称标记C3" not in deceivers[0]:
         _fail("会话级隔离墙：诱导方输入缺 theirs ⇒ 指控方的声称材料没随局入场")
 
+    # ── (5) 信息差教学话术（板块=服务端固定文案；裁判=把概念落到原话）──
+    # 哨兵全从 partition 常量现场取（单一来源：概念句改文案判据跟着走）。
+    ig = xp.build_info_gap_review(case_followup)
+    if not isinstance(ig, dict) or ig.get("title") != xp.INFO_GAP_TITLE:
+        _fail("教学板块：build_info_gap_review 没产出以 INFO_GAP_TITLE 为题的"
+              "结构化板块 ⇒ 复盘页没有信息差这堂课")
+    else:
+        if xp.INFO_GAP_CLAIM_NOTE not in str(ig.get("theirs_note")) or \
+                xp.INFO_GAP_CARD_NOTE not in str(ig.get("mine_note")) or \
+                xp.INFO_GAP_FIELD_NOTE not in str(ig.get("shared_note")):
+            _fail("教学板块：概念句与 partition 常量不一致 ⇒ 前端拿到的话术"
+                  "不是教学设计定稿的那份（单一来源被抄了第二份）")
+        joined = str(ig)
+        for mark in ("共享标记A1", "独知标记B7", "声称标记C3"):
+            if mark not in joined:
+                _fail(f"教学板块：三桶标记 {mark} 缺失 ⇒ 板块没把三桶对照带给用户")
+    if xp.build_info_gap_review(case_plain) is not None:
+        _fail("零变化：无分区时 build_info_gap_review 没返回 None"
+              " ⇒ 老局复盘页会凭空长出信息差板块")
+    # 揭示输入的教学指令段：有分区才出现（概念落到原话的任务交给裁判）
+    rv2 = xp.build_reveal_prompt(case_followup, "交锋Z", "[]")
+    if "信息差教学" not in rv2 or "举证责任" not in rv2:
+        _fail("教学指令段：有分区时揭示输入缺「信息差教学」段 ⇒ 裁判不知道"
+              "怎么用三桶教学（summary/advice 的话术退化回通用模板）")
+    # 会话级：reveal 结果真的带上了板块（服务端算，不依赖裁判交结论）
+    rev = _aio.run(s1.reveal(None))
+    ig_live = rev.get("info_gap_review")
+    if not isinstance(ig_live, dict) or "独知标记B7" not in str(ig_live) \
+            or xp.INFO_GAP_CARD_NOTE not in str(ig_live):
+        _fail("教学板块：reveal 结果没带 info_gap_review（或内容不对）"
+              " ⇒ 前端复盘页拿不到信息差板块数据")
+
     # give_details：补充文本必须真的进第二次受理的输入，且新结论被采纳
     log2: list[tuple[str, str]] = []
     s2 = ExperienceSession(use_stub=True)
@@ -2413,7 +2448,8 @@ def _check_experience_partition(ok: bool) -> bool:
 
     if bad == 0:
         print("  [通过] 体验信息分区：三桶契约 / 诱导方隔离墙（纯函数级+会话级）/"
-              " 无分区逐字节零变化 / 相位机（暂停·闸·跳过·补充被采纳）全部绿"
+              " 无分区逐字节零变化 / 相位机（暂停·闸·跳过·补充被采纳）/"
+              " 信息差教学话术（固定文案板块+裁判教学指令段+会话级注入）全部绿"
               "（真机对跑另见 run/_probe_experience_partition.py）")
     return ok
 
