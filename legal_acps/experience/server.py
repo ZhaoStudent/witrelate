@@ -14,8 +14,10 @@
 
     ssh -L 8090:127.0.0.1:8090 -i <key> ubuntu@<server>
 
-   —— 不要为了图省事把 --host 改成 0.0.0.0（那会把一个"教人识别话术"的
-   未鉴权服务直接暴露到公网）。
+   —— 要直接暴露公网（如 s1 常驻部署），**必须**同时设置访问口令
+      （环境变量 EXP_ACCESS_KEY，见 create_app）：所有 /api/* 调用须带
+      X-Access-Key 头，否则 401。不带口令的裸奔部署会把一个
+      "教人识别话术"的未鉴权服务连同模型 key 一起暴露出去。
 """
 
 from __future__ import annotations
@@ -23,12 +25,13 @@ from __future__ import annotations
 import argparse
 import asyncio
 import contextlib
+import os
 import uuid
 from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, field_validator
 
 from dotenv_lite import load_env
@@ -109,16 +112,48 @@ def _get(sid: str) -> ExperienceSession:
     return session
 
 
-def create_app(*, use_stub: bool = False, verbose: bool = False) -> FastAPI:
+def create_app(
+    *,
+    use_stub: bool = False,
+    verbose: bool = False,
+    access_key: str | None = None,
+) -> FastAPI:
+    """建 FastAPI 应用。
+
+    `access_key`：非空时所有 ``/api/*`` 调用必须带 ``X-Access-Key`` 头
+    （值为空/错 ⇒ 401）。**静态页面不设卡**——HTML 本身无害，且页面要在
+    浏览器里先打开、口令在页面里填。默认 None = 完全不设卡（本地开发 /
+    既有验证零变化）。公网部署**必须**设置（见模块 docstring）。
+    """
     app = FastAPI(
         title="网络诽谤演练 · 你替自己辩白",
         description="让当事人亲身体验被话术编排的过程，并在最后被逐条揭示、"
         "连同他站住的反驳一起点评。",
-        version="1.0.0",
+        version="1.1.0",
     )
+
+    if access_key:
+
+        @app.middleware("http")
+        async def _require_key(request, call_next):
+            # 只管 /api/*：页面（/、/classic）开放，口令在页面侧栏里填。
+            if request.url.path.startswith("/api/"):
+                if request.headers.get("X-Access-Key", "") != access_key:
+                    return JSONResponse(
+                        status_code=401,
+                        content={"detail": "访问口令缺失或不正确"},
+                    )
+            return await call_next(request)
 
     @app.get("/")
     async def index() -> FileResponse:
+        # 新版（2026-10-19）：DeepSeek 风格的演练场页（侧栏历史 + 对话流）。
+        return FileResponse(WEB_DIR / "console.html")
+
+    @app.get("/classic")
+    async def classic() -> FileResponse:
+        # 旧版功能页保留：它身上钉着 26 项前端行为断言（verify_frontend_flow），
+        # 也是无 JS 新特性的兜底入口。
         return FileResponse(WEB_DIR / "index.html")
 
     @app.post("/api/session")
@@ -218,11 +253,19 @@ def cli() -> None:
 
     import uvicorn
 
-    app = create_app(use_stub=args.stub, verbose=args.verbose)
+    # 访问口令（公网部署必须设置；未设置 = 不设卡，行为与旧版完全一致）。
+    access_key = (os.environ.get("EXP_ACCESS_KEY") or "").strip() or None
+    app = create_app(use_stub=args.stub, verbose=args.verbose, access_key=access_key)
     mode = "假模型（StubModel，内容为写死示例）" if args.stub else "真实模型"
     print(f"网络诽谤演练启动：http://{args.host}:{args.port}   模型：{mode}")
+    if access_key:
+        print("访问口令：已启用（/api/* 需带 X-Access-Key 头；页内左下角填口令）")
     if args.host not in ("127.0.0.1", "localhost"):
-        print("⚠️ 你正在监听非本机地址。该服务没有鉴权，请确认这符合你的预期。")
+        if access_key:
+            print("⚠️ 监听非本机地址，但已启用访问口令——请确认口令足够强壮。")
+        else:
+            print("⚠️ 你正在监听非本机地址且未设置 EXP_ACCESS_KEY——"
+                  "未鉴权的公网部署，请立刻停下。")
     with contextlib.suppress(KeyboardInterrupt):
         uvicorn.run(app, host=args.host, port=args.port, log_level="warning")
 

@@ -1,4 +1,4 @@
-// 前端**行为**验证：真跑 index.html 里的脚本，断言它发出去的 HTTP 方法。
+// 前端**行为**验证：真跑页面里的脚本，断言它发出去的 HTTP 方法。
 //
 //     node run/verify_frontend_flow.mjs
 //
@@ -17,6 +17,12 @@
 //   这两个缺陷的共同点是：**只有在脚本真的跑起来时才看得见**。所以这里用一个
 //   最小 DOM/网络桩把脚本跑起来，直接量"发出去的是什么方法、点完之后界面是什么状态"。
 //
+// 2026-10-19 起跑**两个页面**（同一套行为契约）：
+//   · index.html（经典版）
+//   · console.html（DeepSeek 风格新版）
+//   两页保留同一组元素 id（event/startBtn/composer/revealBox…），
+//   同一套断言逐一跑——新皮肤不许弄丢任何一个旧行为。
+//
 // 输出：每项 [通过]/[失败]；有失败则退出码 1。
 
 import { readFileSync } from 'node:fs';
@@ -25,7 +31,10 @@ import { dirname, join } from 'node:path';
 import vm from 'node:vm';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const HTML_PATH = join(ROOT, 'legal_acps', 'experience', 'web', 'index.html');
+const PAGES = [
+  ['legal_acps/experience/web/index.html', '经典版 index.html'],
+  ['legal_acps/experience/web/console.html', '新版 console.html'],
+];
 
 let PASS = 0;
 let FAIL = 0;
@@ -216,10 +225,10 @@ function makeFetch(calls, opts = {}) {
 }
 
 // ── 装载脚本 ───────────────────────────────────────────────────────────
-function loadSandbox(opts = {}) {
-  const html = readFileSync(HTML_PATH, 'utf8');
+function loadSandbox(htmlPath, opts = {}) {
+  const html = readFileSync(htmlPath, 'utf8');
   const m = html.match(/<script>([\s\S]*?)<\/script>/);
-  if (!m) throw new Error('index.html 里找不到 <script> 块');
+  if (!m) throw new Error(htmlPath + ' 里找不到 <script> 块');
 
   const calls = [];
   const dom = makeDom();
@@ -231,13 +240,28 @@ function loadSandbox(opts = {}) {
     console: { warn: () => {}, log: () => {}, error: () => {} },
   };
   vm.createContext(sandbox);
-  vm.runInContext(m[1], sandbox, { filename: 'index.html#script' });
+  vm.runInContext(m[1], sandbox, { filename: htmlPath + '#script' });
   return { sandbox, calls, dom, notices };
 }
 
-async function main() {
-  console.log('网络诽谤演练 · 前端行为验证（真跑 index.html 的脚本）');
-  const { sandbox, calls, dom, notices } = loadSandbox();
+async function runSuite(htmlPath, label) {
+  let PASS = 0;
+  let FAIL = 0;
+  const check = (chkLabel, got, expect) => {
+    const ok = JSON.stringify(got) === JSON.stringify(expect);
+    ok ? PASS++ : FAIL++;
+    console.log(
+      `  [${ok ? '通过' : '失败'}] ${chkLabel}：${JSON.stringify(got)}（期望 ${JSON.stringify(expect)}）`
+    );
+  };
+  const section = (name) => {
+    console.log();
+    console.log(`── ${name} ${'─'.repeat(Math.max(0, 58 - name.length))}`);
+  };
+
+  console.log();
+  console.log(`══ ${label} ══`);
+  const { sandbox, calls, dom, notices } = loadSandbox(join(ROOT, htmlPath));
   const $ = (id) => dom.document.getElementById(id);
 
   section('用例 A：完整一局（开局 → 辩白 → 标记 → 揭示 → 收尾）');
@@ -339,7 +363,7 @@ async function main() {
   // 服务端在裁判交不回结论时会**降级**（不报废整局），并给 `judge_ok: false`。
   // 前端如果不把它显眼地摆出来，"降级"就会变成一个安静的常态：
   // 页面照样能看，没人知道裁判其实一直没干活 —— 本项目最忌讳的那种缺陷。
-  const deg = loadSandbox({ degraded: true });
+  const deg = loadSandbox(join(ROOT, htmlPath), { degraded: true });
   const $d = (id) => deg.dom.document.getElementById(id);
   $d('event').value = '有人到处说我拿了公司的钱';
   await $d('startBtn').click();
@@ -365,13 +389,31 @@ async function main() {
 
   console.log();
   if (FAIL) {
-    console.log(`❌ ${FAIL} 项失败 / ${PASS + FAIL} 项断言`);
+    console.log(`❌ ${label}：${FAIL} 项失败 / ${PASS + FAIL} 项断言`);
+  } else {
+    console.log(`✅ ${label}：${PASS} 项断言全部通过。`);
+    console.log('  · 揭示真的走 POST —— "点了只报 405" 这个缺陷不会再回来');
+    console.log('  · 揭示 → 再体验一次 → 第二局，输入框始终可用');
+    console.log('  · 裁判没交回结论时提示顶到最上面 —— 降级不会变成安静的常态');
+  }
+  return { pass: PASS, fail: FAIL };
+}
+
+async function main() {
+  console.log('网络诽谤演练 · 前端行为验证（同套契约跑两个页面）');
+  let totalFail = 0;
+  let totalPass = 0;
+  for (const [htmlPath, label] of PAGES) {
+    const r = await runSuite(htmlPath, label);
+    totalFail += r.fail;
+    totalPass += r.pass;
+  }
+  console.log();
+  if (totalFail) {
+    console.log(`❌ 共 ${totalFail} 项失败 / ${totalPass + totalFail} 项断言`);
     return 1;
   }
-  console.log(`✅ 全部符合预期：${PASS} 项断言通过。`);
-  console.log('  · 揭示真的走 POST —— "点了只报 405" 这个缺陷不会再回来');
-  console.log('  · 揭示 → 再体验一次 → 第二局，输入框始终可用');
-  console.log('  · 裁判没交回结论时提示顶到最上面 —— 降级不会变成安静的常态');
+  console.log(`✅ 两页全部符合预期：共 ${totalPass} 项断言通过。`);
   return 0;
 }
 

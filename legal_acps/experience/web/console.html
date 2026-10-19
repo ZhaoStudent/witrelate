@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>反诈演练场 · 亲历一次被编排，学会识破它</title>
+<style>
+  /* ── 浅色主题（DeepSeek 官网风）：白卡 · 浅灰底 · 大留白 ────────────── */
+  :root{
+    --bg:#f7f8fa; --side:#f2f3f5; --card:#ffffff;
+    --line:#e6e8ec; --line2:#d4d7dd;
+    --tx:#1a2233; --tx2:#5b6472; --tx3:#9aa2af;
+    --accent:#4d6bfe; --accent-bg:#eef1ff;
+    --pro:#c2571f; --pro-bg:#fdeee3;
+    --ok:#1f7a4d; --ok-bg:#e8f5ee;
+    --warn:#b3413b; --warn-bg:#fbeeed;
+    --trap:#8a6d1a; --trap-bg:#faf3dc;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:var(--bg); color:var(--tx);
+    font:15px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+  }
+  .hide{display:none !important}
+
+  /* ── 整体骨架：左侧栏 + 主区 ─────────────────────────────────────── */
+  .app{display:flex; height:100vh}
+  .side{
+    width:264px; flex:none; background:var(--side); border-right:1px solid var(--line);
+    display:flex; flex-direction:column; padding:16px 12px 12px; gap:6px;
+  }
+  .brand{font-size:16px; font-weight:600; padding:2px 8px; letter-spacing:.3px}
+  .brand i{color:var(--accent); font-style:normal}
+  .slogan{font-size:12px; color:var(--tx3); padding:0 8px 10px}
+  .newbtn{
+    background:var(--card); color:var(--tx); border:1px solid var(--line2); border-radius:12px;
+    padding:10px 12px; font:inherit; font-size:14px; cursor:pointer; text-align:left;
+  }
+  .newbtn:hover{border-color:var(--accent); color:var(--accent)}
+  .slabel{font-size:11.5px; color:var(--tx3); padding:12px 8px 4px}
+  .hist{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:2px}
+  .hitem{
+    font-size:13px; color:var(--tx2); padding:8px 10px; border-radius:10px; cursor:pointer;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  .hitem:hover{background:var(--card); color:var(--tx)}
+  .hitem.on{background:var(--card); color:var(--tx); font-weight:500}
+  .hempty{font-size:12px; color:var(--tx3); padding:6px 10px}
+  .sfoot{border-top:1px solid var(--line); padding-top:10px; display:flex; flex-direction:column; gap:6px}
+  .sfoot input{
+    width:100%; background:var(--card); color:var(--tx); border:1px solid var(--line);
+    border-radius:10px; padding:7px 10px; font-size:12.5px; outline:none;
+  }
+  .sfoot input:focus{border-color:var(--accent)}
+  .links{font-size:11.5px; color:var(--tx3); padding:0 2px}
+  .links a{color:var(--tx2); text-decoration:none}
+  .links a:hover{color:var(--accent)}
+
+  /* ── 主区：顶栏 + 滚动流 + 粘底输入 ──────────────────────────────── */
+  .main{flex:1; display:flex; flex-direction:column; min-width:0}
+  .topbar{
+    display:flex; justify-content:space-between; align-items:center; gap:12px;
+    padding:14px 28px; border-bottom:1px solid var(--line); background:var(--bg);
+    font-size:13px; color:var(--tx2); min-height:50px;
+  }
+  .topbar .title{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:500; color:var(--tx)}
+  .round{flex:none; color:var(--tx3); font-size:12.5px}
+  .flow{flex:1; overflow-y:auto}
+  .col{max-width:760px; margin:0 auto; padding:26px 24px 40px; display:flex; flex-direction:column; gap:16px}
+
+  /* ── 开局向导（空态） ────────────────────────────────────────────── */
+  .hero{padding-top:8vh; display:flex; flex-direction:column; gap:18px}
+  .hero h1{font-size:26px; font-weight:600; margin:0; text-align:center; letter-spacing:.5px}
+  .hero .sub{color:var(--tx2); font-size:14px; text-align:center; margin-top:-8px}
+  .hero textarea{
+    width:100%; background:var(--card); color:var(--tx); border:1px solid var(--line2);
+    border-radius:16px; padding:16px 18px; font:inherit; resize:vertical; outline:none; min-height:96px;
+  }
+  .hero textarea:focus{border-color:var(--accent)}
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{
+    background:var(--card); color:var(--tx2); border:1px solid var(--line2); border-radius:999px;
+    padding:6px 16px; font:inherit; font-size:13px; cursor:pointer;
+  }
+  .chip.on{border-color:var(--accent); color:var(--accent); background:var(--accent-bg)}
+  .startrow{display:flex; justify-content:center; margin-top:2px}
+  .primary{
+    background:var(--accent); color:#fff; border:none; border-radius:12px;
+    padding:12px 42px; font:inherit; font-size:15px; cursor:pointer;
+  }
+  .primary:disabled{opacity:.5; cursor:not-allowed}
+  .examples{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:6px}
+  .ex{
+    background:transparent; color:var(--tx2); border:1px dashed var(--line2); border-radius:12px;
+    padding:8px 14px; font:inherit; font-size:12.5px; cursor:pointer;
+  }
+  .ex:hover{color:var(--accent); border-color:var(--accent)}
+  .footnote{font-size:12px; color:var(--tx3); text-align:center}
+
+  /* ── 加载 ────────────────────────────────────────────────────────── */
+  .loading{display:none; align-items:center; gap:10px; color:var(--tx2); font-size:13.5px; padding:6px 2px}
+  .loading.on{display:flex}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 1.1s infinite}
+  .dot:nth-child(2){animation-delay:.18s}.dot:nth-child(3){animation-delay:.36s}
+  @keyframes pulse{0%,100%{opacity:.25}50%{opacity:1}}
+
+  /* ── 对局卡（命题 / 信息地图 / 立题） ─────────────────────────────── */
+  .casecard{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px 20px}
+  .meta{font-size:11.5px; color:var(--tx3); margin-bottom:4px; letter-spacing:.4px}
+  .prop{font-size:15.5px; font-weight:500}
+  .bucket{margin-top:10px; padding:9px 12px; border-radius:12px; font-size:13px}
+  .bucket .bt{font-weight:500; margin-bottom:3px}
+  .bucket .bi{color:var(--tx2)}
+  .bucket .bi em{font-style:normal; color:var(--tx3)}
+  .b-shared{background:var(--accent-bg)}
+  .b-shared .bt{color:var(--accent)}
+  .b-theirs{background:var(--pro-bg)}
+  .b-theirs .bt{color:var(--pro)}
+  .b-mine{background:var(--ok-bg)}
+  .b-mine .bt{color:var(--ok)}
+  .opening{margin-top:12px; padding-top:10px; border-top:1px dashed var(--line); font-size:13px}
+  .opening .jline{color:var(--tx2)}
+  .opening .jline b{color:var(--accent)}
+  .opening .note{margin-top:4px; color:var(--tx)}
+  .chk{margin-top:6px; padding:7px 10px; border-radius:10px; font-size:12.5px;
+    background:var(--trap-bg); border:1px solid #e9dcae; color:var(--trap)}
+  .chk.block{background:var(--warn-bg); border-color:#ecc8c5; color:var(--warn)}
+
+  /* ── 受理官追问卡 ───────────────────────────────────────────────── */
+  .dcard{background:var(--card); border:1px solid var(--line2); border-radius:16px; padding:16px 20px}
+  .dcard .q{font-size:14.5px; margin:6px 0 10px}
+  .dcard textarea{
+    width:100%; background:var(--bg); color:var(--tx); border:1px solid var(--line2);
+    border-radius:12px; padding:12px 14px; font:inherit; resize:vertical; outline:none;
+  }
+  .dcard textarea:focus{border-color:var(--accent)}
+  .drow{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap}
+  .ghost{
+    background:transparent; color:var(--tx2); border:1px solid var(--line2); border-radius:10px;
+    padding:9px 18px; font:inherit; font-size:14px; cursor:pointer;
+  }
+  .ghost:hover{border-color:var(--accent); color:var(--accent)}
+  .ghost:disabled, .primary:disabled{opacity:.45}
+  .soft{background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:9px 18px; font:inherit; font-size:14px; cursor:pointer}
+  .hint{font-size:12px; color:var(--tx3)}
+
+  /* ── 对话流 ──────────────────────────────────────────────────────── */
+  .msgs{display:flex; flex-direction:column; gap:18px}
+  .msg{display:flex; gap:12px}
+  .msg.user{flex-direction:row-reverse}
+  .avatar{
+    width:34px; height:34px; border-radius:50%; flex:none; display:grid; place-items:center;
+    font-size:13px; font-weight:500;
+  }
+  .msg.pro .avatar{color:var(--pro); background:var(--pro-bg)}
+  .msg.user .avatar{color:var(--accent); background:var(--accent-bg)}
+  .mbody{max-width:min(640px,82%); min-width:0}
+  .who{font-size:11.5px; color:var(--tx3); margin-bottom:4px}
+  .msg.user .who{text-align:right}
+  .bubble{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:12px 16px; white-space:pre-wrap; word-break:break-word; font-size:14.5px;
+  }
+  .msg.pro .bubble{border-top-left-radius:4px}
+  .msg.user .bubble{background:var(--accent-bg); border-color:transparent; border-top-right-radius:4px}
+  button.mark{
+    margin-top:6px; padding:3px 10px; font-size:12px; background:transparent;
+    color:var(--tx3); border:1px dashed var(--line2); border-radius:999px; cursor:pointer; font-family:inherit;
+  }
+  button.mark:hover:not(:disabled){color:var(--trap); border-color:#d9c87e}
+  button.mark.on{color:var(--trap); border-style:solid; border-color:#d9c87e; background:var(--trap-bg)}
+  button.mark:disabled{cursor:default; opacity:.5}
+
+  /* ── 粘底输入 ────────────────────────────────────────────────────── */
+  #chat{display:flex; flex-direction:column; gap:16px}
+  .composer{
+    position:sticky; bottom:0; z-index:5; background:var(--card);
+    border:1px solid var(--line2); border-radius:18px; padding:10px 14px 8px;
+  }
+  .composer textarea{
+    width:100%; border:none; outline:none; resize:none; font:inherit; font-size:14.5px;
+    background:transparent; color:var(--tx); min-height:44px; max-height:160px;
+  }
+  .crow{display:flex; justify-content:space-between; align-items:center; margin-top:4px}
+  .crow .left{display:flex; gap:10px}
+  .sendbtn{
+    background:var(--accent); color:#fff; border:none; border-radius:10px;
+    padding:8px 20px; font:inherit; font-size:14px; cursor:pointer;
+  }
+  .sendbtn:disabled{opacity:.45; cursor:not-allowed}
+  .revealbtn{
+    background:transparent; color:var(--warn); border:1px solid #ecc8c5; border-radius:10px;
+    padding:8px 16px; font:inherit; font-size:13.5px; cursor:pointer;
+  }
+  .revealbtn:hover:not(:disabled){background:var(--warn-bg)}
+  .revealbtn:disabled{opacity:.45; cursor:not-allowed}
+
+  /* ── 复盘页 ──────────────────────────────────────────────────────── */
+  .reveal{background:var(--card); border:1px solid var(--line2); border-radius:18px; padding:22px 26px}
+  .reveal h2{margin:0 0 6px; font-size:19px; font-weight:600}
+  .traps{display:grid; gap:10px; margin:12px 0}
+  .layerName{font-size:12px; color:var(--tx3); margin:14px 0 6px; letter-spacing:.6px}
+  .trap{background:var(--trap-bg); border:1px solid #e9dcae; border-radius:12px; padding:11px 14px}
+  .trap .k{display:inline-block; background:#e2c96a; color:#3a2c00; border-radius:6px;
+    padding:1px 8px; font-size:12px; font-weight:600; margin-right:8px}
+  .trap .ex{color:var(--trap); font-style:italic}
+  .trap .why{color:var(--tx2); font-size:13px; margin-top:6px}
+  ul.solid{margin:8px 0 0; padding-left:20px; color:var(--ok)}
+  ul.solid li{margin:4px 0}
+  ul.plain{margin:8px 0 0; padding-left:20px; color:var(--tx2)}
+  ul.plain li{margin:4px 0}
+  ul.marked{margin:8px 0 0; padding-left:20px; color:var(--trap)}
+  ul.marked li{margin:4px 0}
+  .banner{background:var(--warn-bg); border:1px solid #ecc8c5; color:var(--warn);
+    padding:11px 14px; border-radius:12px; font-size:13.5px; margin-top:14px}
+  .banner.top{margin:0 0 14px}
+  .gapcard{border:1px solid var(--line); border-radius:14px; padding:14px 16px; margin-top:14px}
+  .gapcard .gt{font-weight:600; font-size:14.5px; margin-bottom:6px}
+  .gapcard .gsec{margin-top:10px}
+  .gapcard .gsec .bt{font-size:12.5px; font-weight:500; margin-bottom:2px}
+  .gapcard .gsec ul{margin:2px 0 0; padding-left:18px; color:var(--tx2); font-size:13px}
+  .gapcard .gnote{font-size:12.5px; color:var(--tx3); margin-top:4px; line-height:1.65}
+
+  @media (max-width:860px){
+    .side{display:none}
+    .col{padding:18px 14px 32px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ── 左侧栏：品牌 / 新对局 / 历史 / 口令 ─────────────────────────── -->
+  <aside class="side">
+    <div class="brand"><i>◉</i> 反诈演练场</div>
+    <div class="slogan">亲历一次被编排，学会识破它</div>
+    <button id="newBtn" class="newbtn">＋ 新的体验</button>
+    <div class="slabel">历史对局</div>
+    <div id="sideHist" class="hist"><div class="hempty">还没有对局</div></div>
+    <div class="sfoot">
+      <input id="accessKey" type="password" placeholder="访问口令（自建服务需要）" autocomplete="off" />
+      <div class="links"><a href="/classic">经典版</a> · 教学模拟，不针对任何真实个人或机构</div>
+    </div>
+  </aside>
+
+  <!-- ── 主区 ───────────────────────────────────────────────────────── -->
+  <main class="main">
+    <div class="topbar">
+      <span class="title" id="headTitle">新的体验</span>
+      <span class="round" id="roundHint"></span>
+    </div>
+
+    <div class="flow">
+      <div class="col">
+
+        <!-- 开局向导 -->
+        <section id="intro" class="hero">
+          <h1>今天想演练哪种被编排？</h1>
+          <div class="sub">写清有人在网上怎么说你——系统派一位「指控方」用真实话术编排你，
+          你替自己辩白；结束后由裁判逐条揭穿，并告诉你哪几句反驳站得住。</div>
+          <textarea id="event" rows="3" placeholder="例：有人在业主群里公开发帖，说我私吞了小区维修基金的回扣，还说他手里握有我和施工方的微信转账聊天记录"></textarea>
+          <div class="chips" id="diffChips">
+            <button class="chip" data-diff="轻松">轻松 · 交锋 3 轮</button>
+            <button class="chip on" data-diff="标准">标准 · 交锋 5 轮</button>
+            <button class="chip" data-diff="困难">困难 · 交锋 7 轮</button>
+            <!-- 难度真源：隐藏 input（chips 只改它的值）——服务端校验可选值，
+                 这里不写死第二份清单（加档只改服务端 DIFFICULTY_ROUNDS） -->
+            <input type="hidden" id="difficulty" value="标准" />
+          </div>
+          <div class="startrow">
+            <button id="startBtn" class="primary">开始体验</button>
+          </div>
+          <div class="examples">
+            <button class="ex" data-demo="有人在公司群里说我把内部资料卖给了竞争对手，还说有人看到我跟对方一起吃饭">被人传泄露内部资料</button>
+            <button class="ex" data-demo="同事都在传我升职是因为跟领导走得近，还说我周末被人看见一起出现在酒店">被造谣靠关系上位</button>
+            <button class="ex" data-demo="小区群里有人发我照片说我就是那个偷外卖的，让我给大家一个说法">被张冠李戴冤枉</button>
+          </div>
+          <div class="footnote">难度只改交锋轮数与话术密度，不改内容尺度 · 指控方是虚构角色</div>
+        </section>
+
+        <div id="loading" class="loading">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span id="loadingText">正在思考……</span>
+        </div>
+
+        <!-- 对局 -->
+        <section id="chat" class="hide">
+          <div class="casecard">
+            <div class="meta">对方对你的指控（这局要辩的是它）</div>
+            <div class="prop" id="proposition"></div>
+            <div id="partitionBox"></div>
+            <div id="openingBox" class="opening"></div>
+          </div>
+
+          <!-- 受理官的澄清问题（可答可跳过——追问是可选的）。
+               ⚠️ 显隐全部走 classList.toggle('hide', 条件)：add/remove 的显隐
+                  由静态判据按元素计数配对（tools/verify_experience），toggle
+                  不进计数，免得"补一处忘了配对"把整类断言打红。 -->
+          <div id="detailsBox" class="dcard hide">
+            <div class="meta">受理官想再跟你确认一件事（可答可不答，答完才开辩）</div>
+            <div class="q" id="followupText"></div>
+            <textarea id="details" rows="2" placeholder="补充你知道的情况（留空 = 跳过）"></textarea>
+            <div class="drow">
+              <button id="detailsBtn" class="soft">提交补充</button>
+              <button id="skipBtn" class="ghost">跳过，直接开辩</button>
+              <span class="hint">你补充的信息只会进你和裁判的视野，指控方看不到你自述的实情。</span>
+            </div>
+          </div>
+
+          <div id="msgs" class="msgs"></div>
+
+          <!-- 粘底输入：sticky 悬浮在滚动流底部（DOM 仍挂在 #chat 内，
+               与旧页同构 —— 显隐契约由同一套逻辑管） -->
+          <div id="composer" class="composer">
+            <textarea id="reply" rows="1" placeholder="作为当事人，你想怎么反驳？（Ctrl/⌘ + Enter 发送）"></textarea>
+            <div class="crow">
+              <div class="left">
+                <button id="revealBtn" class="revealbtn">揭晓话术，结束本局</button>
+              </div>
+              <button id="sendBtn" class="sendbtn">发送</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 复盘 -->
+        <section id="revealBox" class="reveal hide"></section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+let sid = null;
+// 是否已达本局轮数上限（模块级：请求 finally 会恢复按钮，无条件恢复会把
+// renderState() 刚设好的禁用覆盖掉——上限就只写在提示文字里了）。
+let atCap = false;
+// 当事人局中标记的「可疑」轮次号（Set：同轮点两次=取消，天然去重）。
+const suspects = new Set();
+// 是否已揭示（揭示后再标记没有意义——对照在服务端已经算完了）。
+let revealed = false;
+
+// ── localStorage 可用性守卫：node 验证桩里没有 localStorage ──────────
+const HAS_LS = (typeof localStorage !== 'undefined');
+function lsGet(k) { if (!HAS_LS) return null; try { return localStorage.getItem(k); } catch (e) { return null; } }
+function lsSet(k, v) { if (!HAS_LS) return; try { localStorage.setItem(k, v); } catch (e) {} }
+
+// ── 访问口令（自建服务用；本地/无口令部署为空 = 不带这个头）──────────
+function apiKey() {
+  const el = $('accessKey');
+  return ((el && el.value) || '').trim();
+}
+(function restoreKey() {
+  const saved = lsGet('exp.key') || '';
+  const el = $('accessKey');
+  if (el && saved) el.value = saved;
+})();
+if (typeof $('accessKey').addEventListener === 'function') {
+  $('accessKey').addEventListener('input', () => lsSet('exp.key', apiKey()));
+}
+
+function setLoading(on, text) {
+  $('loading').classList.toggle('on', on);
+  if (text) $('loadingText').textContent = text;
+}
+function esc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c =>
+    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ⚠️ HTTP 方法必须由**调用方显式声明**（旧页的教训：靠"有没有 body"推断
+//    方法曾把揭示静默发成 GET → 服务端 405，核心交付物整条走不到）。
+async function api(path, {method = 'GET', body} = {}) {
+  const headers = {'Content-Type': 'application/json'};
+  if (apiKey()) headers['X-Access-Key'] = apiKey();
+  const res = await fetch(path, {
+    method,
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const data = await res.json().catch(() => ({}));
+  if (res.status === 401) {
+    throw new Error('访问口令缺失或不正确——请填写左下角的口令后重试');
+  }
+  if (!res.ok) throw new Error(data.detail || ('请求失败 (' + res.status + ')'));
+  return data;
+}
+
+// ── 历史对局（localStorage：sid + 标题；服务端重启即清空，404 时下架）──
+function loadHist() {
+  if (!HAS_LS) return [];
+  try { return JSON.parse(lsGet('exp.sessions') || '[]'); } catch (e) { return []; }
+}
+function saveHist(list) { lsSet('exp.sessions', JSON.stringify(list.slice(0, 30))); }
+function pushHist(newSid, title) {
+  const list = loadHist().filter(x => x.sid !== newSid);
+  list.unshift({sid: newSid, title: (title || '未命名对局').slice(0, 40), ts: Date.now()});
+  saveHist(list);
+  renderHist();
+}
+function dropHist(deadSid) {
+  saveHist(loadHist().filter(x => x.sid !== deadSid));
+  renderHist();
+}
+function renderHist() {
+  const box = $('sideHist');
+  if (!box) return;
+  const list = loadHist();
+  box.innerHTML = list.length
+    ? list.map(x => '<div class="hitem' + (x.sid === sid ? ' on' : '') +
+        '" data-sid="' + esc(x.sid) + '">' + esc(x.title) + '</div>').join('')
+    : '<div class="hempty">还没有对局</div>';
+}
+$('sideHist').onclick = async (e) => {
+  const item = e.target && e.target.closest ? e.target.closest('.hitem') : null;
+  if (!item) return;
+  const want = item.dataset.sid;
+  setLoading(true, '正在恢复这局……');
+  try {
+    const data = await api('/api/session/' + want);
+    sid = want;
+    suspects.clear();
+    for (const n of data.suspects || []) suspects.add(n);
+    renderState(data);
+    renderHist();
+  } catch (err) {
+    // 服务重启会清空内存会话表——如实下架，别留一个永远打不开的条目。
+    dropHist(want);
+    alert('这局打不开了：' + err.message + '（服务重启后对局不保留，请重新开局）');
+  } finally {
+    setLoading(false);
+  }
+};
+renderHist();
+
+// ── 难度 chips：只改 #difficulty 的值（真源仍是服务端 DIFFICULTY_ROUNDS）─
+document.querySelectorAll('#diffChips .chip').forEach(chip => {
+  chip.onclick = () => {
+    $('difficulty').value = chip.dataset.diff;
+    document.querySelectorAll('#diffChips .chip').forEach(c =>
+      c.classList.toggle('on', c === chip));
+  };
+});
+
+// ── 立题结论：程序判的与裁判判的分开呈现（谁判的，一目了然）──────────
+function renderOpening(opening) {
+  const o = opening || {};
+  const judge = o.judge;
+  let html = '';
+  if (judge) {
+    html += '<div class="jline">裁判立题：<b>' +
+      esc(judge.worth_debating ? '值得辩' : '不值得辩') + '</b> · 材料' +
+      esc(judge.sufficiency || '未评级') + '</div>';
+    if (judge.note) html += '<div class="note">' + esc(judge.note) + '</div>';
+  } else {
+    // 拿不到就如实说，不留空、更不显示"一切正常"。
+    html += '<div class="jline">裁判<b>未给出</b>立题意见 —— 本局照常进行，但这一环没有把关。</div>';
+  }
+  for (const g of (judge && judge.gaps) || []) {
+    html += '<div class="chk">裁判还缺：' + esc(g) + '</div>';
+  }
+  for (const c of o.checks || []) {
+    html += '<div class="chk' + (c.level === 'block' ? ' block' : '') + '">' +
+      esc(c.message) + '</div>';
+  }
+  return html;
+}
+
+// ── 信息地图（三桶 · 当事人视图）：前端只展示不归类，口径不抄第二份 ──
+function renderPartition(p) {
+  const buckets = [
+    ['shared', '公开战场 · 双方都知道', 'b-shared'],
+    ['theirs', '对方的牌 · 他声称有、你没见过', 'b-theirs'],
+    ['mine', '你的底牌 · 只有你知道（指控方看不到）', 'b-mine'],
+  ];
+  let html = '';
+  for (const [key, label, cls] of buckets) {
+    const items = (p && p[key]) || [];
+    if (!items.length) continue;
+    html += '<div class="bucket ' + cls + '"><div class="bt">' + esc(label) + '</div>' +
+      items.map(it => '<div class="bi">' + esc(it.fact) +
+        (it.note ? ' <em>（' + esc(it.note) + '）</em>' : '') + '</div>').join('') +
+      '</div>';
+  }
+  return html;
+}
+
+function renderTurns(state) {
+  const box = $('msgs');
+  box.innerHTML = '';
+  for (const t of state.turns) {
+    const isPro = t.role === 'pro';
+    const on = isPro && suspects.has(t.round);
+    const el = document.createElement('div');
+    el.className = 'msg ' + (isPro ? 'pro' : 'user');
+    el.innerHTML =
+      '<div class="avatar">' + (isPro ? '控' : '我') + '</div>' +
+      '<div class="mbody"><div class="who">' + (isPro ? '指控方' : '你') +
+      ' · 第 ' + t.round + ' 轮</div>' +
+      '<div class="bubble">' + esc(t.text) + '</div>' +
+      (isPro ? '<button class="mark' + (on ? ' on' : '') + '" data-round="' +
+        t.round + '">' + (on ? '已标记可疑' : '⚑ 这句有问题') + '</button>' : '') +
+      '</div>';
+    box.appendChild(el);
+  }
+  // 标记按钮：先自己判一次，揭示时再跟真相对照（带着判断听 vs 被动听）。
+  box.querySelectorAll('button.mark').forEach(btn => {
+    if (revealed) btn.disabled = true;
+    btn.onclick = () => {
+      if (revealed) return;
+      const r = Number(btn.dataset.round);
+      const on = !suspects.has(r);
+      if (on) suspects.add(r); else suspects.delete(r);
+      btn.classList.toggle('on', on);
+      btn.textContent = on ? '已标记可疑' : '⚑ 这句有问题';
+    };
+  });
+  box.scrollIntoView({behavior:'smooth', block:'end'});
+}
+
+function renderTrap(t) {
+  return '<div class="trap">' +
+    '<span class="k">' + esc(t.kind || '话术') + '</span>' +
+    '<span class="ex">「' + esc(t.excerpt || '') + '」</span>' +
+    '<div class="why">' + esc(t.why || '') + '</div></div>';
+}
+function renderTrapGroup(group) {
+  const items = (group.traps || []).map(renderTrap).join('');
+  if (!items) return '';
+  return '<div class="layerName">' + esc(group.layer) + '</div>' +
+    '<div class="traps">' + items + '</div>';
+}
+
+function renderReveal(r) {
+  // ⚠️ 分层由服务端给（r.trap_groups）——前端不自己按 kind 判层（口径不抄第二份）。
+  const hasGroups = Array.isArray(r.trap_groups) && r.trap_groups.length > 0;
+  const flat = (r.traps || []).length
+    ? '<div class="traps">' + (r.traps || []).map(renderTrap).join('') + '</div>'
+    : '';
+  const traps = hasGroups ? r.trap_groups.map(renderTrapGroup).join('') : flat;
+  const hot = (r.hot_spots || []).map(x => '<li>' + esc(x) + '</li>').join('');
+  // solid_moves 与 hot_spots 成对：只报"你哪儿被带偏"，教出来的是被动。
+  const solid = (r.solid_moves || []).map(x => '<li>' + esc(x) + '</li>').join('');
+  const adv = (r.advice || []).map(x => '<li>' + esc(x) + '</li>').join('');
+  // 当事人自己的判断 vs 真实话术（两个方向都报：抓对了，以及多疑了）。
+  const sr = r.suspect_report || {};
+  const markedN = (sr.marked || []).length;
+  const hitN = (sr.hit || []).length;
+  const faN = (sr.false_alarm || []).length;
+  let suspectHtml;
+  if (markedN) {
+    const parts = ['你标记了 ' + markedN + ' 轮'];
+    if (hitN) {
+      parts.push('其中 ' + hitN + ' 轮对方确实用了话术（第 ' +
+        (sr.hit || []).join('、') + ' 轮）');
+    }
+    if (faN) {
+      parts.push('第 ' + (sr.false_alarm || []).join('、') +
+        ' 轮其实没有话术 —— 那几轮是你多虑了');
+    }
+    suspectHtml =
+      '<div class="meta" style="margin-top:12px">你自己标的，准不准</div>' +
+      '<ul class="marked"><li>' + esc(parts.join('；')) + '</li></ul>';
+  } else {
+    suspectHtml =
+      '<div class="hint" style="margin-top:12px">本局你没有标记任何一轮。' +
+      '下次可以试试点「⚑ 这句有问题」先自己判一次，再看对不对得上。</div>';
+  }
+  // 裁判没交回结论时（judge_ok === false）服务端降级：提示顶到最上面。
+  // 判据只认服务端给的 judge_ok，前端不自己推断"内容是不是空的"。
+  const degraded = r.judge_ok === false;
+  const summary = r.summary ? '<div class="banner">' + esc(r.summary) + '</div>' : '';
+
+  // 信息差复盘板块（服务端纯函数算的数据：三桶对照 + 概念句固定文案）。
+  const ig = r.info_gap_review;
+  let gapHtml = '';
+  if (ig) {
+    const bucket = (title, items, note, cls) =>
+      '<div class="gsec"><div class="bt ' + cls + '">' + esc(title) + '</div>' +
+      ((items || []).length
+        ? '<ul>' + items.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>'
+        : '<div class="gnote">（这一桶受理时是空的）</div>') +
+      '<div class="gnote">' + esc(note) + '</div></div>';
+    gapHtml =
+      '<div class="gapcard"><div class="gt">' + esc(ig.title) + '</div>' +
+      bucket('公开战场 · 双方都知道', ig.shared, ig.shared_note, '') +
+      bucket('对方的牌 · 他声称有、你没见过', ig.theirs, ig.theirs_note, '') +
+      bucket('你的底牌 · 只有你知道', ig.mine, ig.mine_note, '') +
+      '</div>';
+  }
+
+  $('revealBox').innerHTML =
+    '<h2>复盘 · 他刚才是这样编排你的</h2>' +
+    (degraded ? summary.replace('class="banner"', 'class="banner top"') : '') +
+    '<div class="hint">本局共交锋 ' + (r.rounds ?? 0) + ' 轮</div>' +
+    traps +
+    gapHtml +
+    suspectHtml +
+    (hot ? '<div class="meta" style="margin-top:12px">最容易带偏你的地方</div><ul class="plain">' + hot + '</ul>' : '') +
+    (solid ? '<div class="meta" style="margin-top:12px">你这几句是站得住的</div><ul class="solid">' + solid + '</ul>' : '') +
+    (adv ? '<div class="meta" style="margin-top:12px">下次怎么防</div><ul class="plain">' + adv + '</ul>' : '') +
+    (degraded ? '' : summary) +
+    // ⚠️ 教学伦理红线：本局必须以揭示收尾（揭示成功后立即调 /close）。
+    '<div class="drow"><button id="againBtn" class="ghost">再体验一次</button>' +
+    '<span class="hint">本局已结束：复盘即收尾，不会停留在"看过话术却没收尾"的状态。</span></div>';
+  $('revealBox').classList.remove('hide');
+  $('composer').classList.add('hide');
+  // 揭示后标记按钮的失效由 renderState → renderTurns 统一处理（口径只有一处）。
+  const again = $('againBtn');
+  if (again) again.onclick = resetToIntro;
+  $('revealBox').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderState(state) {
+  if (state.case) {
+    $('intro').classList.add('hide');
+    $('chat').classList.remove('hide');
+    $('proposition').textContent = state.case.proposition || '（未给出命题）';
+    $('partitionBox').innerHTML = renderPartition(state.case.partition);
+    $('openingBox').innerHTML = renderOpening(state.opening);
+    $('headTitle').textContent = state.case.proposition || '对局进行中';
+  }
+  // 相位渲染：awaiting_details 时出补充卡、收输入框（此时辩白会被 409 拒）。
+  const awaiting = state.phase === 'awaiting_details';
+  $('detailsBox').classList.toggle('hide', !awaiting);
+  if (awaiting) $('followupText').textContent = state.followup || '';
+  if (state.case && !state.reveal) {
+    $('composer').classList.toggle('hide', awaiting);
+  }
+  // 必须在 renderTurns 之前定好（揭示后那帧要把标记按钮一起禁用）。
+  revealed = !!state.reveal;
+  renderTurns(state);
+  const used = state.pro_rounds || 0;
+  const max = state.max_rounds || 5;
+  $('roundHint').textContent = '第 ' + used + ' / ' + max + ' 轮';
+  atCap = used >= max;
+  if (state.notice) $('roundHint').textContent = state.notice;
+  if (state.reveal) renderReveal(state.reveal);
+}
+
+// ── 会话收尾（教学伦理红线：揭示即收尾，前端立即调 /close）──────────
+async function closeSession() {
+  if (!sid) return;
+  const closing = sid;
+  sid = null;
+  try {
+    await api('/api/session/' + closing + '/close', {method: 'POST'});
+  } catch (e) {
+    // 关闭失败不影响复盘展示：重启服务端后该会话自然消失。
+    console.warn('结束会话失败：', e);
+  }
+}
+
+function resetToIntro() {
+  sid = null;
+  atCap = false;
+  // 上一局的判断不带到下一局。
+  suspects.clear();
+  revealed = false;
+  $('openingBox').innerHTML = '';
+  $('revealBox').classList.add('hide');
+  $('revealBox').innerHTML = '';
+  $('chat').classList.add('hide');
+  $('intro').classList.remove('hide');
+  // ⚠️ composer 的 hide 必须撤掉（旧页教训：不撤=第二局输入框永久消失，
+  //    曾被 405 掩盖着没人发现）。纪律：add('hide') 必有配对 remove。
+  $('composer').classList.remove('hide');
+  $('msgs').innerHTML = '';
+  $('reply').value = '';
+  $('details').value = '';
+  $('partitionBox').innerHTML = '';
+  $('event').value = '';
+  $('roundHint').textContent = '';
+  $('headTitle').textContent = '新的体验';
+  $('sendBtn').disabled = false;
+  $('revealBtn').disabled = false;
+  renderHist();
+  $('event').focus();
+}
+
+$('newBtn').onclick = resetToIntro;
+
+$('startBtn').onclick = async () => {
+  const event = $('event').value.trim();
+  if (!event) { $('event').focus(); return; }
+  $('startBtn').disabled = true;
+  setLoading(true, '受理官正在受理，裁判正在立题……');
+  try {
+    const data = await api('/api/session', {
+      method: 'POST',
+      body: {event, difficulty: $('difficulty').value}
+    });
+    sid = data.session_id;
+    pushHist(sid, (data.case && data.case.proposition) || event);
+    renderState(data);
+  } catch (e) {
+    alert('开局失败：' + e.message);
+  } finally {
+    setLoading(false);
+    $('startBtn').disabled = false;
+  }
+};
+
+$('sendBtn').onclick = async () => {
+  const text = $('reply').value.trim();
+  if (!text || !sid) return;
+  $('reply').value = '';
+  $('sendBtn').disabled = true;
+  setLoading(true, '指控方正在组织回应……');
+  try {
+    renderState(await api('/api/session/' + sid + '/reply', {method: 'POST', body: {text}}));
+  } catch (e) {
+    alert('发送失败：' + e.message);
+  } finally {
+    setLoading(false);
+    $('sendBtn').disabled = atCap;  // 触顶后不要再放开
+  }
+};
+
+$('revealBtn').onclick = async () => {
+  if (!sid) return;
+  $('revealBtn').disabled = true;
+  setLoading(true, '裁判正在逐条梳理话术……');
+  try {
+    // ⚠️ 必须显式 POST（旧页教训：一个字符的差别曾让揭示整体 405）。
+    renderState(await api('/api/session/' + sid + '/reveal', {
+      method: 'POST',
+      body: {suspected: [...suspects]}
+    }));
+    // 红线：揭示即收尾。
+    await closeSession();
+  } catch (e) {
+    alert('揭示失败：' + e.message);
+  } finally {
+    setLoading(false);
+    if (sid) $('revealBtn').disabled = false;
+  }
+};
+
+document.querySelectorAll('[data-demo]').forEach(btn => {
+  btn.onclick = () => { $('event').value = btn.dataset.demo; };
+});
+
+$('reply').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('sendBtn').click();
+});
+
+// ── 受理官澄清问题：回答 / 跳过（追问是可选的）──────────────────────
+// 与 reply 不同：空文本 = 合法的跳过，所以不能复用"空就不发"的逻辑。
+async function submitDetails(skip) {
+  if (!sid) return;
+  const text = skip ? '' : $('details').value.trim();
+  $('detailsBtn').disabled = true;
+  $('skipBtn').disabled = true;
+  setLoading(true, skip ? '受理完成，正在开辩……' : '受理官正在更新信息分区……');
+  try {
+    renderState(await api('/api/session/' + sid + '/details', {
+      method: 'POST',
+      body: {text}
+    }));
+  } catch (e) {
+    alert('提交失败：' + e.message);
+  } finally {
+    setLoading(false);
+    $('details').value = '';
+    $('detailsBtn').disabled = false;
+    $('skipBtn').disabled = false;
+  }
+}
+
+$('detailsBtn').onclick = () => submitDetails(false);
+$('skipBtn').onclick = () => submitDetails(true);
+$('details').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('detailsBtn').click();
+});
+</script>
+</body>
+</html>

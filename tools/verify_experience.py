@@ -1133,7 +1133,13 @@ def http_case() -> None:
     with TestClient(create_app(use_stub=True)) as client:
         r = client.get("/")
         check("GET / 返回页面", r.status_code, 200)
-        check_true("页面含标题", "网络诽谤演练" in r.text)
+        # 2026-10-19 起 / 服务新版演练场页（console.html），旧页挪到 /classic。
+        # 锚点跟着实现搬家：断言认的是"这个路由服务的真是那一个页面"——
+        # 认错页面（比如 / 还指旧页）说明路由改挂了。
+        check_true("页面含标题（新版演练场）", "反诈演练场" in r.text)
+        r = client.get("/classic")
+        check("GET /classic 返回页面", r.status_code, 200)
+        check_true("classic 页面含标题（旧版兜底入口）", "网络诽谤演练" in r.text)
 
         r = client.post("/api/session", json={"event": DEMO_EVENT})
         check("POST /api/session", r.status_code, 200)
