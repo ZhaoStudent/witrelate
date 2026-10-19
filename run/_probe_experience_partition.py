@@ -218,6 +218,15 @@ async def run_probe() -> int:
         print(f"    mine   · {mine[0][:60] if mine else '（空）'}")
         print(f"    theirs · {theirs[0][:60] if theirs else '（空）'}")
 
+    # ── 软观察（不进退出码）：裁判的教学话术质量 —— 有没有把三个概念
+    #    落到当事人这局的原话上（教学指令段只保证「送到了」，采纳是模型的
+    #    自由；打印出来供人工验收话术打磨效果）。
+    if rev.get("judge_ok"):
+        print("\n  [观察·不进退出码] 裁判复盘 summary（教学话术验收）：")
+        print("    " + str(rev.get("summary") or "")[:300])
+        for i, a in enumerate(rev.get("advice") or [], 1):
+            print(f"    advice{i} · {str(a)[:100]}")
+
     return 0 if all(o for _, o, _ in results) else 1
 
 
