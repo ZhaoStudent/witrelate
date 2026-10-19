@@ -167,6 +167,78 @@ class CaseOpening(BaseModel):
 
 
 # ===========================================================================
+# 信息分区（2026-10-19 · 用户拍板）：真实谣言生态的解剖结构就是**非对称信息**
+# —— 指控方手里有（或声称有）当事人没见过的材料，当事人手里有指控方不知道
+# 的实情。诱导方此前连整份「可核验事实清单」都看得到，是全流程里最不真实的
+# 一环（现实里指控方不会把事实清单摊出来）。
+#
+# 三只桶（每条信息**只按「谁知道」归类**，不判真假——那是裁定的事）：
+#   · shared —— 双方都知道（对方公开发出来的、当事人公开回应过的）
+#   · mine   —— 只有当事人自己知道（他自述的实情：不在场、手里的凭证）
+#   · theirs —— 指控方**声称**掌握、当事人没见过也没法核验的（"他说有截图"）
+#
+# 🔴 隔离墙在**代码层**（session 拼接诱导方输入时不放 mine），不在提示词层
+#    —— "叮嘱模型别偷看"不算墙。判据：check_local 体验分区节（行为断言）。
+# ===========================================================================
+
+
+class PartitionItem(BaseModel):
+    """分区里的一条信息。**尽量沿用用户原话**（存事实不存结论）；
+    受理官不许编造用户没提过的内容。"""
+
+    fact: str = Field(description="一条信息，尽量沿用当事人的原话")
+    note: str = Field(
+        default="",
+        description="备注（如：这只是对方的声称、当事人没见过材料）；没有就留空",
+    )
+
+
+class InfoPartition(BaseModel):
+    """按「谁知道」分好的三桶。**全空 = 老会话/老模型输出**，
+    各拼接处据此走零变化的老路（优雅退化，判据盯着这条）。"""
+
+    shared: list[PartitionItem] = Field(
+        default_factory=list,
+        description="双方都知道的信息（对方公开发出来的内容等）",
+    )
+    mine: list[PartitionItem] = Field(
+        default_factory=list,
+        description="只有当事人自己知道的信息（他自述的实情）",
+    )
+    theirs: list[PartitionItem] = Field(
+        default_factory=list,
+        description="指控方声称掌握、当事人没见过也没法核验的材料（只是声称）",
+    )
+
+    def __bool__(self) -> bool:
+        """有没有任何一桶非空（拼接处用它决定走分区还是走老路）。"""
+        return bool(self.shared or self.mine or self.theirs)
+
+
+class IntakeCase(ArbitrationCase):
+    """体验受理官的产出 —— 在主链路 `ArbitrationCase`（**不动它**：那是
+    fact-judge 等已过审角色共用的契约）之上加两个字段：
+
+      · partition —— 信息分区（默认空 = 行为与旧版完全一致）
+      · followup  —— 受理官想问当事人的**一个**澄清问题；信息已够时留空。
+        会话编排器据此暂停开辩（用户可答、可跳过 —— 追问是**可选**的）。
+
+    ⚠️ 继承而非另写全份：字段口径（proposition/fact_sheet/立场）只允许有
+       一个定义处；另抄一份 = 加字段时必漏一处。
+    """
+
+    partition: InfoPartition = Field(
+        default_factory=InfoPartition,
+        description="按「谁知道」分好的三桶信息；用户没给够信息就尽量填，分不清的放 shared",
+    )
+    followup: str = Field(
+        default="",
+        description="想问当事人的一个澄清问题（如：他手里说有什么材料？你自己"
+        "知道哪些是他不知道的？）。信息已经够分区就**留空**，不要为了问而问",
+    )
+
+
+# ===========================================================================
 # 受理官 —— 对应 legal-consult-leader（外层 Leader）
 # ===========================================================================
 
@@ -175,10 +247,12 @@ class CaseOpening(BaseModel):
     id="case.accept",
     description=(
         "提交受理结论：把用户给的事件整理成一个**可判真假的命题**、"
-        "一份可核验事实清单，以及正反双方的立场。"
+        "一份可核验事实清单、正反双方的立场，以及按「谁知道」分好的"
+        "信息分区（shared/mine/theirs）；分区信息明显不足时可以在 "
+        "followup 里问当事人**一个**澄清问题。"
     ),
 )
-def accept_case(case: ArbitrationCase) -> dict:
+def accept_case(case: IntakeCase) -> dict:
     return case.model_dump(mode="json")
 
 
@@ -200,6 +274,16 @@ INTAKE_INSTRUCTIONS = """你是反诈体验应用里的**受理官**，对应主
 3. 给出正反双方的立场：
    · **正方 = 指控方**（那条指控成立）—— 这是用户在现实中要面对的那一方；
    · **反方 = 当事人本人**（那条指控不成立）—— 由用户自己来当。
+4. 把已知信息按「**谁知道**」分进三只桶（partition 字段）——只按知情面归类，
+   **不判真假**（裁定不是你的事）：
+   · shared —— 双方都知道的（对方公开发出来的帖子内容、当事人公开回应过的）；
+   · mine —— 只有当事人自己知道的（他自述的个人实情：不在场、手里的凭证）；
+   · theirs —— 指控方**声称**掌握、但当事人没见过也没法核验的（"他说有聊天记录"）。
+   每条尽量沿用用户原话；分不清放哪桶的，宁可放 shared；**用户没提过的绝不许编**。
+5. followup（**可选**）：只有当 mine 和 theirs 都几乎为空、而缺了它们明显影响
+   对局质量时，才在 followup 里问当事人**一个**澄清问题（例："他手里说有什么
+   材料？你自己知道哪些是他不知道的？"）。信息已经够分区就**留空**——
+   不要为了问而问；追问最多一次，答完不再追问。
 
 调用 `case_accept` 提交。**不要下任何真假结论**，也不要替用户喊冤 —— 裁定不是你的事。
 
@@ -210,9 +294,10 @@ def build_intake(model) -> WitAgent:
     return WitAgent(
         id="experience-intake",
         display_name="受理官（体验）",
-        description="把指向当事人的指控整理成可判真假的命题与可核验事实清单，"
-        "并给出「指控方 / 当事人」两方立场。",
-        version="1.0.0",
+        description="把指向当事人的指控整理成可判真假的命题、可核验事实清单与"
+        "「指控方 / 当事人」两方立场，并把已知信息按「谁知道」分成三桶"
+        "（shared/mine/theirs）；分区信息不足时可问一个澄清问题。",
+        version="1.1.0",
         instructions=INTAKE_INSTRUCTIONS,
         model=model,
         capabilities=[accept_case],

@@ -167,10 +167,27 @@
 
   <section id="chat" class="hide">
     <div id="caseBox" class="card" style="padding:14px 16px;margin-top:8px">
-      <div class="meta">对方对你的指控（这局要辩的就是它）</div>
+      <div class="meta">对方对你的指控（这局要辩的是它）</div>
       <div id="proposition" style="font-size:14.5px"></div>
+      <div id="partitionBox"></div>
       <div id="openingBox" class="opening"></div>
     </div>
+
+    <!-- 受理官的澄清问题（可答可跳过——追问是可选的）。
+         ⚠️ 显隐全部走 classList.toggle('hide', 条件)：add/remove 的显隐
+            由静态判据按元素计数配对（tools/verify_experience），toggle
+            不进计数，免得"补一处忘了配对"把整类断言打红。 -->
+    <div id="detailsBox" class="card hide" style="padding:14px 16px">
+      <div class="meta">受理官想再跟你确认一件事（可答可不答，答完才开辩）</div>
+      <div id="followupText" style="font-size:14px;margin:6px 0 8px"></div>
+      <textarea id="details" rows="2" placeholder="补充你知道的情况（留空 = 跳过）"></textarea>
+      <div class="row">
+        <button id="detailsBtn">提交补充</button>
+        <button id="skipBtn" class="ghost">跳过，直接开辩</button>
+        <span class="hint">你补充的信息只会进你和裁判的视野，指控方看不到你自述的实情。</span>
+      </div>
+    </div>
+
     <div id="msgs" class="msgs"></div>
 
     <div id="composer" class="card">
@@ -381,13 +398,42 @@ function renderReveal(r) {
   $('revealBox').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
+// 信息分区的当事人视图（shared + mine + theirs-以「对方声称」形态）。
+// 数据由受理官整理、服务端原样带回；前端只做展示，不自己归类——
+// 口径抄第二份必漂移（分层渲染已把这类坑踩过一遍，见 renderReveal）。
+function renderPartition(p) {
+  const buckets = [
+    ['shared', '双方都知道'],
+    ['mine', '只有你知道（指控方看不到这些）'],
+    ['theirs', '对方声称掌握（你没见过材料，只是他的说法）'],
+  ];
+  let html = '';
+  for (const [key, label] of buckets) {
+    const items = (p && p[key]) || [];
+    if (!items.length) continue;
+    html += '<div class="meta" style="margin-top:8px">' + esc(label) + '</div>' +
+      items.map(it => '<div class="chk">' + esc(it.fact) +
+        (it.note ? '（' + esc(it.note) + '）' : '') + '</div>').join('');
+  }
+  return html;
+}
+
 function renderState(state) {
   if (state.case) {
     $('intro').classList.add('hide');
     $('chat').classList.remove('hide');
     $('proposition').textContent = state.case.proposition || '（未给出命题）';
+    $('partitionBox').innerHTML = renderPartition(state.case.partition);
     // 立题结论跟着命题一起出现 —— 它就是"这道命题站不站得住"的交代。
     $('openingBox').innerHTML = renderOpening(state.opening);
+  }
+  // 相位渲染：awaiting_details 时出补充框、收输入框（辩白此时会被 409 拒绝，
+  // 让按钮可点只会制造一个永远失败的按钮）。toggle 不进显隐配对计数。
+  const awaiting = state.phase === 'awaiting_details';
+  $('detailsBox').classList.toggle('hide', !awaiting);
+  if (awaiting) $('followupText').textContent = state.followup || '';
+  if (state.case && !state.reveal) {
+    $('composer').classList.toggle('hide', awaiting);
   }
   // ⚠️ 必须在 renderTurns **之前**定好：揭示后的那一帧要靠它把标记按钮一起禁用，
   //    否则按钮还是可点的（点了也进不了已经算完的那份对照）。
@@ -446,6 +492,8 @@ function resetToIntro() {
   $('composer').classList.remove('hide');
   $('msgs').innerHTML = '';
   $('reply').value = '';
+  $('details').value = '';
+  $('partitionBox').innerHTML = '';
   $('event').value = '';
   $('roundHint').textContent = '';
   $('sendBtn').disabled = false;
@@ -516,6 +564,37 @@ document.querySelectorAll('[data-demo]').forEach(btn => {
 
 $('reply').addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('sendBtn').click();
+});
+
+// ── 受理官澄清问题：回答 / 跳过（追问是可选的）──────────────────
+// ⚠️ 与 reply 不同：这里允许空文本 = 跳过（DetailsReq.text 留空即跳过），
+//    所以不能复用 sendBtn 的"空就不发"逻辑。method 显式 POST（静态判据
+//    要求每一处 api() 都写出方法）。
+async function submitDetails(skip) {
+  if (!sid) return;
+  const text = skip ? '' : $('details').value.trim();
+  $('detailsBtn').disabled = true;
+  $('skipBtn').disabled = true;
+  setLoading(true, skip ? '受理完成，正在开辩……' : '受理官正在更新信息分区……');
+  try {
+    renderState(await api('/api/session/' + sid + '/details', {
+      method: 'POST',
+      body: {text}
+    }));
+  } catch (e) {
+    alert('提交失败：' + e.message);
+  } finally {
+    setLoading(false);
+    $('details').value = '';
+    $('detailsBtn').disabled = false;
+    $('skipBtn').disabled = false;
+  }
+}
+
+$('detailsBtn').onclick = () => submitDetails(false);
+$('skipBtn').onclick = () => submitDetails(true);
+$('details').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) $('detailsBtn').click();
 });
 </script>
 </body>

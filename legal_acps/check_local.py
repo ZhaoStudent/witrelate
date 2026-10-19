@@ -2203,6 +2203,221 @@ def _check_human_debate(ok: bool) -> bool:
     return ok
 
 
+def _check_experience_partition(ok: bool) -> bool:
+    """⑦-13 体验应用信息分区：三桶受理 · 诱导方隔离墙 · 可选追问 · 零变化。
+
+    背景（2026-10-19 用户拍板）：真实谣言生态的解剖结构是**非对称信息**——
+    指控方手里有（或声称有）当事人没见过的材料，当事人手里有指控方不知道
+    的实情。受理官把已知信息按「谁知道」分成 shared/mine/theirs 三桶；
+    诱导方只拿 shared+theirs，当事人与裁判看得到 mine。
+
+    本节守四条，全部是**行为断言**（不是 grep 源码）：
+      (1) 契约：IntakeCase 有分区与追问字段、默认值零变化；主链路
+          ArbitrationCase **没有**这两个字段（防有人把体验字段倒灌进
+          已过审角色共用的契约）。
+      (2) 🔴 隔离墙：假分区喂 build_deceiver_prompt —— shared/theirs 的
+          标记在、mine 的标记**不在**。墙在拼接处（代码层），不在提示词层。
+      (3) 零变化：没有分区时 build_deceiver_prompt 与旧版**逐字节相同**
+          （stub 流程 / 老判据一个不破）；渲染函数返回空串。
+      (4) 相位机：forge _run 注入带 followup 的受理结论 —— start 停在
+          awaiting_details、reply 被相位闸拒绝、skip 开辩、give_details 的
+          补充文本真的进了第二次受理输入；且**会话级**诱导方输入同样不含
+          mine 标记（墙不只存在于纯函数里）。
+    """
+    print("⑦-13 体验应用信息分区（三桶受理 · 诱导方隔离墙 · 可选追问 · 零变化）")
+    bad = 0
+    import asyncio as _aio
+
+    from legal_acps.contracts import ArbitrationCase
+    from legal_acps.experience import partition as xp
+    from legal_acps.experience.roles import IntakeCase
+    from legal_acps.experience.session import ExperienceSession
+
+    def _fail(msg: str) -> None:
+        nonlocal ok, bad
+        print(f"  [失败] {msg}")
+        ok, bad = False, bad + 1
+
+    # ── (1) 契约与零变化基座 ─────────────────────────────────────────
+    base = IntakeCase(
+        event="e", proposition="他收受了好处",
+        fact_sheet={"event": "e", "items": [], "missing": [], "notes": ""},
+        pro_position="指控成立", con_position="指控不成立",
+    )
+    if base.followup != "" or bool(base.partition):
+        _fail("分区契约：IntakeCase 默认值不是空分区+空追问 ⇒ 零变化基座被破坏"
+              "（stub 流程会莫名暂停）")
+    if "partition" in ArbitrationCase.model_fields or \
+            "followup" in ArbitrationCase.model_fields:
+        _fail("主链路契约：ArbitrationCase 被加上了 partition/followup 字段"
+              " ⇒ 体验专属字段倒灌进已过审角色共用的契约（必须只留在 IntakeCase）")
+    # 假分区能通过契约校验（分区对象本身可用）
+    payload = base.model_dump(mode="json")
+    payload["partition"] = {
+        "shared": [{"fact": "帖子公开发出", "note": ""}],
+        "mine": [{"fact": "当晚在外地", "note": "登机牌"}],
+        "theirs": [{"fact": "他说有聊天记录", "note": "只是声称"}],
+    }
+    try:
+        IntakeCase.model_validate(payload)
+    except Exception as exc:  # noqa: BLE001
+        _fail(f"分区契约：合法分区 payload 校验不过（{type(exc).__name__}）"
+              " ⇒ 受理结论带分区就会被拒")
+
+    # ── (2) 🔴 隔离墙（纯函数级）─────────────────────────────────────
+    case_part = {
+        "proposition": "他收受了好处", "pro_position": "指控成立",
+        "fact_sheet": {"event": "e", "items": [], "missing": [], "notes": ""},
+        "partition": {
+            "shared": [{"fact": "公开帖里写着指控原文·共享标记A1", "note": ""}],
+            "mine": [{"fact": "我当晚在杭州出差有登机牌·独知标记B7", "note": "只有我知道"}],
+            "theirs": [{"fact": "他说手里有转账聊天记录·声称标记C3", "note": "没见过材料"}],
+        },
+    }
+    dp = xp.build_deceiver_prompt(case_part, "【指控方】开场X", 1, "标准", "分寸Y")
+    if "共享标记A1" not in dp or "声称标记C3" not in dp:
+        _fail("隔离墙：诱导方输入缺 shared/theirs ⇒ 指控方连自己声称的材料都"
+              "拿不到，话术没法围绕信息差构建")
+    if "独知标记B7" in dp:
+        _fail("🔴 隔离墙：诱导方输入里出现了 mine 的内容 ⇒ 当事人自述的实情"
+              "泄给了指控方（体验层最危险的失真：铁证被对方提前知道）")
+    av = xp.render_accuser_view(case_part)
+    if "独知标记B7" in av or "声称标记C3" not in av:
+        _fail("隔离墙：render_accuser_view 形态不对（mine 泄漏或缺 theirs）")
+
+    # ── (3) 零变化（无分区 = 旧形态逐字节相同）───────────────────────
+    case_plain = {
+        "proposition": "他收受了好处", "pro_position": "指控成立",
+        "fact_sheet": {"event": "e", "items": [
+            {"item": "有人发帖", "source_level": "来源不明", "source": "未获取到"}],
+            "missing": [], "notes": ""},
+    }
+    import json as _json
+    expected_old = (
+        "═══ 本局命题 ═══\n"
+        "他收受了好处\n\n"
+        "═══ 可核验事实清单 ═══\n"
+        f"{_json.dumps(case_plain['fact_sheet'], ensure_ascii=False, indent=2)}\n\n"
+        "═══ 你方（指控方）立场 ═══\n"
+        "指控成立\n\n"
+        "═══ 交锋记录（最新在最后）═══\n"
+        "【指控方】开场X\n\n"
+        "这是第 2 轮（本局难度：标准）。请用话术构建你的发言，"
+        "并调用 `debate_trap_argument` 提交：message 给用户看、"
+        "traps 诚实自曝你用了哪些手法。\n"
+        "本局难度的分寸：" + "分寸Y"
+    )
+    got_plain = xp.build_deceiver_prompt(case_plain, "【指控方】开场X", 2, "标准", "分寸Y")
+    if got_plain != expected_old:
+        _fail("零变化：无分区时诱导方输入与旧版**不是逐字节相同** ⇒ stub 流程 /"
+              " 前端判据 / 元验证锚全部失真（分区改造的最小承诺被破坏）")
+    for fn in (xp.render_accuser_view, xp.render_user_view, xp.render_full_partition):
+        if fn(case_plain) != "":
+            _fail(f"零变化：{fn.__name__} 对无分区 case 没有返回空串")
+    # 用户视图与揭示三桶：mine 必须在场（他自己 / 裁判当然看得到）
+    uv = xp.render_user_view(case_part)
+    rv = xp.build_reveal_prompt(case_part, "交锋Z", "[]")
+    if "独知标记B7" not in uv:
+        _fail("用户视图：mine 不在 ⇒ 当事人看不到自己的实情被整理成什么样")
+    if "独知标记B7" not in rv or "信息分区" not in rv:
+        _fail("揭示输入：三桶全貌缺位 ⇒ 裁判看不见信息差，揭示退化为纯话术汇总"
+              "（本次改造对揭示的最低要求就是『带上三桶』）")
+    if "信息分区" in xp.build_reveal_prompt(case_plain, "交锋Z", "[]"):
+        _fail("零变化：无分区时揭示输入混进了「信息分区」段 ⇒ 旧形态被改")
+
+    # ── (4) 相位机（forge _run 的会话级行为断言）─────────────────────
+    # 🔴 夹具纪律：下面的会话级断言找的是 A1/B7/C3 三个标记，所以 forge 的
+    # 受理结论必须带 case_part 那份**含标记**的分区——若沿用 payload 的无标记
+    # 分区，theirs 断言恒红、mine 断言恒绿（空转），两边都不名实相符。
+    # （fact_sheet/proposition 用 payload 的原份，保证确定性守门照常放行。）
+    case_followup = _json.loads(_json.dumps(payload))
+    case_followup["partition"] = _json.loads(_json.dumps(case_part["partition"]))
+    case_followup["followup"] = "他手里说有什么材料？你自己知道哪些是他不知道的？"
+
+    def _forge(prompts_log):
+        async def _run(runtime, prompt, *, tool, what, **kw):
+            prompts_log.append((tool, prompt))
+            if tool == "case.accept":
+                return _json.loads(_json.dumps(case_followup, ensure_ascii=False))
+            if tool == "case.open":
+                return {"worth_debating": True, "sufficiency": "勉强",
+                        "gaps": [], "note": "（forge）立题"}
+            if tool == "debate.trap_argument":
+                return {"message": "（forge）话术发言", "traps": []}
+            return {}
+        return _run
+
+    log: list[tuple[str, str]] = []
+    s1 = ExperienceSession(use_stub=True)
+    s1._run = _forge(log)  # type: ignore[method-assign]
+    st = _aio.run(s1.start("有人在群里说我拿了回扣"))
+    if st.get("phase") != "awaiting_details" or not st.get("followup") \
+            or st.get("pro_rounds") != 0:
+        _fail(f"相位机：受理官给了 followup 却没暂停开辩（phase={st.get('phase')}，"
+              f"pro_rounds={st.get('pro_rounds')}）⇒ 可选追问名存实亡")
+    # 相位闸：awaiting_details 时辩白必须被拒（补充信息 ≠ 辩白，两条路不能混）
+    try:
+        _aio.run(s1.reply("我现在就要辩"))
+    except RuntimeError:
+        pass
+    else:
+        _fail("相位机：awaiting_details 时 reply 没有被拒 ⇒ 用户的补充信息会被"
+              "当成辩白混进交锋记录")
+    # 跳过 → 开辩；会话级隔离墙：诱导方输入同样不含 mine
+    st2 = _aio.run(s1.skip_details())
+    deceivers = [p for t, p in log if t == "debate.trap_argument"]
+    if st2.get("phase") != "debating" or st2.get("pro_rounds") != 1 or not deceivers:
+        _fail(f"相位机：skip_details 没有开辩（phase={st2.get('phase')}，"
+              f"pro_rounds={st2.get('pro_rounds')}）")
+    elif "独知标记B7" in deceivers[0]:
+        _fail("🔴 会话级隔离墙：skip 后诱导方实际收到的输入含 mine ⇒ 墙只在"
+              "纯函数里成立、链路上没走通")
+    elif "声称标记C3" not in deceivers[0]:
+        _fail("会话级隔离墙：诱导方输入缺 theirs ⇒ 指控方的声称材料没随局入场")
+
+    # give_details：补充文本必须真的进第二次受理的输入，且新结论被采纳
+    log2: list[tuple[str, str]] = []
+    s2 = ExperienceSession(use_stub=True)
+    merged_case = _json.loads(_json.dumps(payload, ensure_ascii=False))
+    merged_case["proposition"] = "他收受了好处（已按补充修订）"
+    # 同上：分区换成含 B7 标记那份，末尾的 mine 隔离断言才不空转。
+    merged_case["partition"] = _json.loads(_json.dumps(case_part["partition"]))
+    calls = {"accept": 0}
+
+    async def _run2(runtime, prompt, *, tool, what, **kw):
+        log2.append((tool, prompt))
+        if tool == "case.accept":
+            calls["accept"] += 1
+            return dict(merged_case if calls["accept"] > 1 else case_followup)
+        if tool == "case.open":
+            return {"worth_debating": True, "sufficiency": "勉强",
+                    "gaps": [], "note": "（forge）立题"}
+        if tool == "debate.trap_argument":
+            return {"message": "（forge）话术发言", "traps": []}
+        return {}
+
+    s2._run = _run2  # type: ignore[method-assign]
+    _aio.run(s2.start("有人在群里说我拿了回扣"))
+    st3 = _aio.run(s2.give_details("我当晚在杭州出差，登机牌还在，他说的那天我根本不在本市"))
+    accepts = [p for t, p in log2 if t == "case.accept"]
+    if st3.get("phase") != "debating" or len(accepts) < 2:
+        _fail(f"相位机：give_details 没有触发第二次受理并开辩"
+              f"（phase={st3.get('phase')}，受理 {len(accepts)} 次）")
+    else:
+        if "杭州出差" not in accepts[1]:
+            _fail("相位机：用户的补充回答没有进第二次受理的输入 ⇒ 补充被静默丢弃")
+        if st3.get("case", {}).get("proposition") != "他收受了好处（已按补充修订）":
+            _fail("相位机：补充后的新受理结论没有替换旧结论 ⇒ 用户答了也白答")
+        if "独知标记B7" in (p for t, p in log2 if t == "debate.trap_argument").__next__():
+            _fail("🔴 会话级隔离墙：give_details 路径的诱导方输入含 mine")
+
+    if bad == 0:
+        print("  [通过] 体验信息分区：三桶契约 / 诱导方隔离墙（纯函数级+会话级）/"
+              " 无分区逐字节零变化 / 相位机（暂停·闸·跳过·补充被采纳）全部绿"
+              "（真机对跑另见 run/_probe_experience_partition.py）")
+    return ok
+
+
 def _check_debate_ruling(ok: bool) -> bool:
     """⑦-7 辩论裁定（阶段 2）：辩词全文进裁判输入 · 坏台账必炸 · 产出衔接经验库。
 
@@ -8038,6 +8253,10 @@ def main() -> None:
         # ⑦-12 系统性负控集（2026-10-13，#102 拍板）：喂无害热点看会不会
         #    硬造问题——假阳方向，与 gt 校准（假阴方向）互补。
         ("系统性负控集", _check_negative_controls(True)),
+        # ⑦-13 体验应用信息分区（2026-10-19，功能④改造）：受理官三桶 +
+        #    诱导方隔离墙（代码层）+ 可选追问相位机。独立成节的理由同上
+        #    ——红的时候报自己的名字。
+        ("体验信息分区", _check_experience_partition(True)),
     ]
     # 🔴 本机 MCP 接线是**三态**的（通过 / 失败 / 本机不成立），**不能**塞进
     #    `results`：那张表只有 True/False，`None` 一进去就会被 `if ok` 当成"通过"

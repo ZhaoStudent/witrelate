@@ -73,6 +73,16 @@ class ReplyReq(BaseModel):
     text: str = Field(min_length=1, max_length=2000, description="你（当事人）的回应")
 
 
+class DetailsReq(BaseModel):
+    """对受理官澄清问题的回答。`text` 留空 = 跳过（追问是可选的）。"""
+
+    text: str = Field(
+        default="",
+        max_length=2000,
+        description="对受理官问题的补充回答；留空表示跳过",
+    )
+
+
 class RevealReq(BaseModel):
     """揭示时一并提交的**当事人自己的判断**。
 
@@ -143,6 +153,22 @@ def create_app(*, use_stub: bool = False, verbose: bool = False) -> FastAPI:
             except ValueError as exc:
                 # 同 create_session：空白文本是客户端错误，不是 500
                 raise HTTPException(status_code=400, detail=str(exc)) from exc
+            except RuntimeError as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+    @app.post("/api/session/{sid}/details")
+    async def details(sid: str, req: DetailsReq) -> dict[str, Any]:
+        """回答（或跳过）受理官的澄清问题，然后才开辩。
+
+        追问是**可选的**：text 留空 = 跳过，用现有受理结论直接开辩；
+        不在 awaiting_details 相位调用这里 = 409（把状态机走错当客户端错误）。
+        """
+        session = _get(sid)
+        async with _lock_for(sid):
+            try:
+                if (req.text or "").strip():
+                    return await session.give_details(req.text)
+                return await session.skip_details()
             except RuntimeError as exc:
                 raise HTTPException(status_code=409, detail=str(exc)) from exc
 

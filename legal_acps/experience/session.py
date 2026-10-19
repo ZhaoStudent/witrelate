@@ -35,6 +35,12 @@ from wit import RunConfig, WitRuntime
 
 from ..contracts import group_fallacies
 from .opening import inspect_case
+from .partition import (
+    build_deceiver_prompt,
+    build_opening_prompt,
+    build_reveal_prompt,
+    has_partition,
+)
 from .roles import build_deceiver, build_intake, build_judge
 from .tool_scope import MAX_TOKENS_KEY, ONLY_TOOL_KEY
 
@@ -141,6 +147,14 @@ class SessionState:
     max_rounds: int = MAX_EXCHANGE_ROUNDS
     #: 当事人在局中标记为"可疑"的轮次号（他自己的判断，用来和真实话术对照）
     suspects: list[int] = field(default_factory=list)
+    #: 会话相位（2026-10-19 信息分区改造）：
+    #:   · "awaiting_details" —— 受理官问了澄清问题，等当事人补充（可跳过）；
+    #:   · "debating"         —— 已开辩（或无需补充直接开辩）。
+    #: 老会话 / stub 不产 followup ⇒ 永远不进 awaiting_details，相位只是新增
+    #: 事实字段，不动既有判定（finished 仍以 reveal 为准）。
+    phase: str = "debating"
+    #: 受理官的澄清问题原文（phase=awaiting_details 时非空）。
+    followup: str = ""
 
     @property
     def finished(self) -> bool:
@@ -168,6 +182,8 @@ class SessionState:
             "case": self.case,
             "opening": self.opening,
             "finished": self.finished,
+            "phase": self.phase,
+            "followup": self.followup,
             "pro_rounds": self.pro_rounds,
             "max_rounds": self.max_rounds,
             "suspects": list(self.suspects),
@@ -309,9 +325,11 @@ class ExperienceSession:
             self._intake,
             "**当事人**说，有人在网上这样编排他：\n\n"
             f"{event}\n\n"
-            "请把**指向他的那条指控**整理成一个可判真假的命题、一份可核验事实清单，"
-            "并给出「指控方 / 当事人」两方立场"
-            "（正方 = 指控成立；反方 = 指控不成立，由他自己来当）。"
+            "请把**指向他的那条指控**整理成一个可判真假的命题、一份可核验事实清单、"
+            "「指控方 / 当事人」两方立场"
+            "（正方 = 指控成立；反方 = 指控不成立，由他自己来当），"
+            "并按「谁知道」把已知信息分进 shared/mine/theirs 三桶。"
+            "分区信息明显不足时，可以在 followup 里问当事人**一个**澄清问题。"
             "调用 `case_accept` 提交。",
             tool="case.accept",
             what="受理",
@@ -325,17 +343,80 @@ class ExperienceSession:
             )
         self.state.case = case
 
+        # 追问是**可选的**（2026-10-19 用户拍板）：受理官给了 followup 才暂停，
+        # 用户可答（give_details）可跳过（skip_details）；stub / 信息够时
+        # followup 为空 ⇒ 直接开辩，老流程一个字不变。
+        followup = str(case.get("followup") or "").strip()
+        if followup:
+            self.state.phase = "awaiting_details"
+            self.state.followup = followup
+            return self.state.to_dict()
+        await self._after_intake()
+        return self.state.to_dict()
+
+    async def give_details(self, text: str) -> dict[str, Any]:
+        """当事人回答受理官的澄清问题 → 重新受理（分区按新信息修订）→ 开辩。"""
+        if self.state.phase != "awaiting_details":
+            raise RuntimeError("当前没有待回答的受理问题。")
+        text = (text or "").strip()
+        if not text:
+            # 空回答 = 事实上的跳过；交给同一个出口，别让前端多学一种调用。
+            return await self.skip_details()
+        case0 = self.state.case or {}
+        merged = await self._run(
+            self._intake,
+            "当事人先前说：\n\n"
+            f"{self.state.event}\n\n"
+            "你上一轮的受理结论（命题 / 事实清单 / 立场 / 信息分区）：\n\n"
+            f"{json.dumps(case0, ensure_ascii=False, indent=2)}\n\n"
+            f"你随后问了当事人：**{self.state.followup}**\n\n"
+            f"当事人补充回答：\n\n{text}\n\n"
+            "请**更新**受理结论（命题/事实清单/立场/shared-mine-theirs 分区都按"
+            "新信息修订，补充的信息归入合适的桶——他自己知道实情放 mine，"
+            "对方声称的材料放 theirs，双方都看得见的放 shared）。"
+            "**这次不要再追问**（followup 必须留空）。调用 `case_accept` 提交。",
+            tool="case.accept",
+            what="受理·补充",
+        )
+        notice = ""
+        if merged is None:
+            # 旁路纪律：补充受理失败不报废整局 —— 沿用原结论开辩，如实告知。
+            # （用户没做错任何事，为他保留一局完整体验比抛 502 更重要。）
+            notice = "（补充受理这一步没有成功，本局沿用先前的受理结论继续。）"
+        else:
+            self.state.case = merged
+        await self._after_intake()
+        if notice:
+            return self.state.to_dict() | {"notice": notice}
+        return self.state.to_dict()
+
+    async def skip_details(self) -> dict[str, Any]:
+        """当事人跳过澄清问题 —— 用现有受理结论直接开辩。"""
+        if self.state.phase != "awaiting_details":
+            raise RuntimeError("当前没有待回答的受理问题。")
+        await self._after_intake()
+        return self.state.to_dict()
+
+    async def _after_intake(self) -> None:
+        """受理完成（无论是否经过追问）后的共同出路：立题 + 诱导方开场。"""
+        self.state.phase = "debating"
+        self.state.followup = ""
         # ②③ 立题（确定性守门 + 裁判语义立题）
         await self._opening()
-
         # ④ 诱导方第 1 轮
         await self._deceiver_round()
-        return self.state.to_dict()
 
     async def reply(self, user_text: str) -> dict[str, Any]:
         """当事人替自己辩白 → 指控方回应。"""
         if self.state.finished:
             raise RuntimeError("本局已结束（已揭示）。要再体验请重新开局。")
+        if self.state.phase == "awaiting_details":
+            # 相位闸：没解决澄清问题就进辩场，会把"补充信息"当成"辩白"——
+            # 语义完全不同的两条路，不能悄悄替用户选。
+            raise RuntimeError(
+                f"受理官还想问你一个问题：{self.state.followup} "
+                "（可以回答，也可以跳过；回答后辩论才会开始。）"
+            )
         user_text = (user_text or "").strip()
         if not user_text:
             raise ValueError("发言不能为空")
@@ -375,18 +456,13 @@ class ExperienceSession:
         traps_all = [t for turn in self.state.turns for t in turn.traps]
         judge_out = await self._run(
             self._judge,
-            "═══ 本局命题 ═══\n"
-            f"{case.get('proposition', '（未给出）')}\n\n"
-            "═══ 可核验事实清单 ═══\n"
-            f"{json.dumps(case.get('fact_sheet') or {}, ensure_ascii=False, indent=2)}\n\n"
-            "═══ 交锋记录 ═══\n"
-            f"{self._transcript()}\n\n"
-            "═══ 诱导方逐轮自曝的话术记录（原始数据，可能有遗漏）═══\n"
-            f"{json.dumps(traps_all, ensure_ascii=False, indent=2)}\n\n"
-            "请完成收尾揭示，调用 `case_reveal` 提交。"
-            "记住三件事：① 当事人是被模拟的一方，**不要羞辱他**；"
-            "② `hot_spots`（他被带偏的地方）与 `solid_moves`（他站住的地方）**都要写**，"
-            "只讲前者会把他教成被动的；③ 你给的是话术识别与自保建议，不是法律定性。",
+            # 提示词构建抽成了纯函数（partition.build_reveal_prompt）——
+            # 信息分区段在函数里加（有分区才出现），判据可直接对它做行为断言。
+            build_reveal_prompt(
+                case,
+                self._transcript(),
+                json.dumps(traps_all, ensure_ascii=False, indent=2),
+            ),
             tool="case.reveal",
             what="揭示",
             # ⚠️ 揭示的两项预算都单独给：它是**上下文最长**的一环。
@@ -456,18 +532,11 @@ class ExperienceSession:
         # ② 确定性守门 —— 纯函数，不依赖模型
         checks = inspect_case(case)
 
-        # ③ 裁判语义立题
+        # ③ 裁判语义立题（提示词构建在 partition.build_opening_prompt ——
+        #    裁判是中立方，有分区时附三桶全貌）
         judge = await self._run(
             self._judge,
-            "═══ 受理官整理的命题 ═══\n"
-            f"{case.get('proposition', '（未给出）')}\n\n"
-            "═══ 可核验事实清单 ═══\n"
-            f"{json.dumps(case.get('fact_sheet') or {}, ensure_ascii=False, indent=2)}\n\n"
-            "═══ 两方立场 ═══\n"
-            f"指控方：{case.get('pro_position', '（未给出）')}\n"
-            f"当事人：{case.get('con_position', '（未给出）')}\n\n"
-            "请完成开场立题，调用 `case_open` 提交。"
-            "记住：`note` 只写**一句话**，不要给自保建议、不要下真假结论。",
+            build_opening_prompt(case),
             tool="case.open",
             what="立题",
         )
@@ -557,19 +626,11 @@ class ExperienceSession:
         """让诱导方针对最近一条用户发言（或开场）输出一轮带话术的回应。"""
         case = self.state.case or {}
         nxt = self.state.pro_rounds + 1
-        prompt = (
-            "═══ 本局命题 ═══\n"
-            f"{case.get('proposition', '（未给出）')}\n\n"
-            "═══ 可核验事实清单 ═══\n"
-            f"{json.dumps(case.get('fact_sheet') or {}, ensure_ascii=False, indent=2)}\n\n"
-            "═══ 你方（指控方）立场 ═══\n"
-            f"{case.get('pro_position', '那条指控成立')}\n\n"
-            "═══ 交锋记录（最新在最后）═══\n"
-            f"{self._transcript() or '（还没有交锋，这是你的开场）'}\n\n"
-            f"这是第 {nxt} 轮（本局难度：{self.difficulty}）。请用话术构建你的发言，"
-            "并调用 `debate_trap_argument` 提交：message 给用户看、"
-            "traps 诚实自曝你用了哪些手法。\n"
-            "本局难度的分寸：" + DIFFICULTY_BRIEF.get(self.difficulty, "")
+        # 🔴 信息隔离墙在 build_deceiver_prompt 里（代码层）：它只拼
+        #    shared+theirs，mine 无路可进 —— 提示词层"叮嘱别偷看"不算墙。
+        prompt = build_deceiver_prompt(
+            case, self._transcript(), nxt,
+            self.difficulty, DIFFICULTY_BRIEF.get(self.difficulty, ""),
         )
         out = await self._run(
             self._deceiver, prompt, tool="debate.trap_argument", what=f"诱导方第{nxt}轮"
