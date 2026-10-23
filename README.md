@@ -22,6 +22,7 @@
 - **两周整改**：11 项清单见 [docs/整改清单.md](docs/整改清单.md)；
 - **材料**：技术方案 [PDF](docs/aicomp/技术方案-法前哨.pdf) / [DOCX](docs/aicomp/技术方案-法前哨.docx) 已出；
   答辩 [PPT](docs/aicomp/法前哨-答辩PPT.pptx) / [PDF](docs/aicomp/法前哨-答辩PPT.pdf) 已出；
+  [5 分钟卡时](docs/aicomp/答辩-5分钟卡时.md) 与 [代码冻结](docs/提交冻结-2026-10-23.md) 已备；
   5 分钟视频为**可选项**，暂不做；[脚本](docs/aicomp/视频脚本-法前哨.md) 仅留档；
 - **外部试用**：目标 3 个不同的人/账号各成功调用一次，见
   [docs/外部试用邀请.md](docs/外部试用邀请.md) 与
