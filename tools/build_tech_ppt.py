@@ -33,7 +33,7 @@ prs = Presentation()
 prs.slide_width = Inches(13.333)
 prs.slide_height = Inches(7.5)
 BLANK = prs.slide_layouts[6]
-TOTAL = 15
+TOTAL = 16
 
 
 def set_run_font(run, size=16, bold=False, color=GRAY, name=FONT):
@@ -607,7 +607,28 @@ add_text(s, "未来：20 条 holdout / 鉴伪 ground truth / MCP 能力开放 / 
 add_footer(s, 14)
 add_notes(s, "最后复盘四点经验，并把标准化建议落在协议/平台层面。未来工作只列能验证的，不画大饼。")
 
-# ---------------------------------------------------------------- 15 closing
+# ---------------------------------------------------------------- 15 Q&A backup: mobile / hidden cards
+s = new_slide()
+add_title(s, "Q&A 备用 · 产品化", "手机端：把他“有什么”藏起来")
+add_image_fit(s, ROOT / "docs" / "product" / "界面设计" / "m3-screen.png",
+              0.55, 1.22, 2.7, 5.55)
+add_text(s, "手机端 · 对方打出一张牌", 0.65, 6.82, 2.7, 0.2, size=8, color=MID)
+add_text(s, "本页不讲 · Q&A 备用", 3.95, 1.28, 2.6, 0.25, size=9, bold=True, color=ORANGE)
+add_bullets(s, [
+    "主入口是手机 PWA，不是桌面 exe：消息、截图、录音都在手机上。",
+    "对方只有一个牌背 + “数量未知”；声称是虚线标签，不是牌。",
+    "只有“已打出”的牌才进入核验；复盘才给实际手牌。",
+    "桌面只做深读、整理、导出；手机负责“发生的那一刻”。",
+], 3.95, 1.75, 8.85, 2.8, size=14, line=1.2, gap=10)
+add_rect(s, 3.95, 4.75, 8.8, 1.15, RGBColor(0xFF, 0xF6, 0xE6), RGBColor(0xF0, 0xD2, 0x9A))
+add_text(s, "“他用了哪一张，哪一张才显示；否则用户就成上帝了。”",
+         4.15, 4.95, 8.35, 0.4, size=16, bold=True, color=RGBColor(0x7A, 0x4A, 0x12))
+add_text(s, "产品原则：声称 ≠ 手牌；手牌 ≠ 已打出；已打出 ≠ 真实；真实 ≠ 能证明。",
+         3.95, 6.25, 8.8, 0.3, size=11, color=TEAL)
+add_footer(s, 15)
+add_notes(s, "备用页，只在评委问产品形态时讲：手机 PWA 优先，对方手牌是隐藏信息，只有打出的牌才核验；桌面退到深读/导出。")
+
+# ---------------------------------------------------------------- 16 closing
 s = new_slide()
 add_rect(s, 0, 0, 13.333, 7.5, NAVY, None, radius=False)
 add_rect(s, 0.65, 1.15, 0.08, 3.1, TEAL, None, radius=False)
