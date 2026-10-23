@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; background: #f7f9fc; }
+  #diagram { width: 1500px; height: 860px; }
+  text { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+</style>
+</head>
+<body>
+<div id="diagram">
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="860" viewBox="0 0 1500 860">
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#4a6b8a"/>
+    </marker>
+    <marker id="arrowDash" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#9aa8b6"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1500" height="860" fill="#f7f9fc"/>
+  <text x="750" y="42" text-anchor="middle" font-size="26" font-weight="700" fill="#123b5d">法前哨 · 两级嵌套 Leader / Partner 架构</text>
+  <text x="750" y="70" text-anchor="middle" font-size="14" fill="#5b6b7c">ACPs / AIP 直连 RPC · mTLS + AIC 身份 · Discovery 发现伙伴 · 链深上限 3</text>
+
+  <!-- external caller -->
+  <rect x="550" y="96" width="400" height="58" rx="10" fill="#e8f1fb" stroke="#2b5c8a" stroke-width="1.5"/>
+  <text x="750" y="120" text-anchor="middle" font-size="16" font-weight="600" fill="#123b5d">用户 / 外部 AIP Agent</text>
+  <text x="750" y="141" text-anchor="middle" font-size="12" fill="#5b6b7c">文本 + 图片 / 音频 / 视频（可选附件）</text>
+  <line x1="750" y1="154" x2="750" y2="184" stroke="#4a6b8a" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- leader -->
+  <rect x="450" y="186" width="600" height="78" rx="12" fill="#123b5d" stroke="#123b5d"/>
+  <text x="750" y="214" text-anchor="middle" font-size="19" font-weight="700" fill="#ffffff">法前哨 · 外层 Leader（8445）</text>
+  <text x="750" y="239" text-anchor="middle" font-size="13" fill="#d7e6f3">受理 → 分支 → 汇总 → FinalVerdict（结构化契约，不做法律定性）</text>
+
+  <!-- arrows to branches -->
+  <path d="M560 264 L250 300" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M650 264 L560 300" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M850 264 L860 300" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M940 264 L1100 300" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+
+  <!-- fact judge -->
+  <rect x="80" y="302" width="330" height="70" rx="10" fill="#ffffff" stroke="#4a6b8a" stroke-width="1.5"/>
+  <text x="245" y="329" text-anchor="middle" font-size="16" font-weight="600" fill="#123b5d">网络裁判（fact-judge）</text>
+  <text x="245" y="350" text-anchor="middle" font-size="12" fill="#5b6b7c">内层 Leader · 8448 · FactRuling</text>
+  <path d="M190 372 L150 408" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M300 372 L340 408" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="50" y="410" width="190" height="50" rx="8" fill="#eef5fb" stroke="#7b9ab5"/>
+  <text x="145" y="431" text-anchor="middle" font-size="14" fill="#123b5d">辩论正方 8446</text>
+  <text x="145" y="449" text-anchor="middle" font-size="11" fill="#5b6b7c">结构化辩词</text>
+  <rect x="255" y="410" width="190" height="50" rx="8" fill="#eef5fb" stroke="#7b9ab5"/>
+  <text x="350" y="431" text-anchor="middle" font-size="14" fill="#123b5d">辩论反方 8447</text>
+  <text x="350" y="449" text-anchor="middle" font-size="11" fill="#5b6b7c">结构化辩词</text>
+
+  <!-- evidence leader -->
+  <rect x="440" y="302" width="330" height="70" rx="10" fill="#ffffff" stroke="#4a6b8a" stroke-width="1.5"/>
+  <text x="605" y="329" text-anchor="middle" font-size="16" font-weight="600" fill="#123b5d">证据鉴证 Leader</text>
+  <text x="605" y="350" text-anchor="middle" font-size="12" fill="#5b6b7c">内层 Leader · 8450 · EvidenceRuling</text>
+  <path d="M520 372 L500 408" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M605 372 L605 408" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <path d="M690 372 L710 408" stroke="#4a6b8a" stroke-width="2" fill="none" marker-end="url(#arrow)"/>
+  <rect x="420" y="410" width="160" height="50" rx="8" fill="#eef5fb" stroke="#7b9ab5"/>
+  <text x="500" y="431" text-anchor="middle" font-size="13" fill="#123b5d">图像 8449</text>
+  <text x="500" y="449" text-anchor="middle" font-size="11" fill="#5b6b7c">s2 · EXIF/ELA/噪声</text>
+  <rect x="592" y="410" width="160" height="50" rx="8" fill="#eef5fb" stroke="#7b9ab5"/>
+  <text x="672" y="431" text-anchor="middle" font-size="13" fill="#123b5d">音频 8451</text>
+  <text x="672" y="449" text-anchor="middle" font-size="11" fill="#5b6b7c">s2 · 容器/频谱/底噪</text>
+  <rect x="764" y="410" width="160" height="50" rx="8" fill="#eef5fb" stroke="#7b9ab5"/>
+  <text x="844" y="431" text-anchor="middle" font-size="13" fill="#123b5d">视频 8452</text>
+  <text x="844" y="449" text-anchor="middle" font-size="11" fill="#5b6b7c">s2 · 容器/帧/时间线</text>
+
+  <!-- law advisor -->
+  <rect x="800" y="302" width="190" height="70" rx="10" fill="#ffffff" stroke="#4a6b8a" stroke-width="1.5"/>
+  <text x="895" y="329" text-anchor="middle" font-size="15" font-weight="600" fill="#123b5d">法律顾问 8453</text>
+  <text x="895" y="350" text-anchor="middle" font-size="11" fill="#5b6b7c">库内法条 · LegalAdvice</text>
+
+  <!-- lead intake -->
+  <rect x="1010" y="302" width="190" height="70" rx="10" fill="#ffffff" stroke="#4a6b8a" stroke-width="1.5"/>
+  <text x="1105" y="329" text-anchor="middle" font-size="15" font-weight="600" fill="#123b5d">线索受理 8454</text>
+  <text x="1105" y="350" text-anchor="middle" font-size="11" fill="#5b6b7c">结构化线索 · LeadSubmission</text>
+
+  <!-- experience -->
+  <rect x="1010" y="430" width="380" height="128" rx="10" fill="#fff8ec" stroke="#c98a2e" stroke-width="1.5" stroke-dasharray="7 5"/>
+  <text x="1200" y="458" text-anchor="middle" font-size="15" font-weight="600" fill="#7a4a12">反诈演练场（8090，独立进程）</text>
+  <text x="1200" y="480" text-anchor="middle" font-size="11" fill="#7a5a32">受理官 / 诱导方 / 裁判 + 信息三桶</text>
+  <text x="1200" y="500" text-anchor="middle" font-size="11" fill="#7a5a32">揭示环节强制收尾；不注册 ACPs，不计平台访问</text>
+
+  <!-- bottom notes -->
+  <rect x="50" y="560" width="1340" height="86" rx="10" fill="#eef3f8" stroke="#d4e0ea"/>
+  <text x="75" y="588" font-size="13" font-weight="600" fill="#123b5d">读图要点</text>
+  <text x="75" y="611" font-size="12" fill="#40566b">· 实线 = ACPs/AIP mTLS 直连；虚线 = 进程内/非平台；证据三叶子在 s2（101.33.124.181），其余在 s1。</text>
+  <text x="75" y="631" font-size="12" fill="#40566b">· 两级嵌套：主控（1）→ 内层 Leader（2）→ 叶子（3），与 MAX_CHAIN_DEPTH=3 一致；扇出不等于链深。</text>
+
+  <text x="50" y="700" font-size="12" fill="#7b8b9b">incitement 8443 / harm 8444：软废弃，代码保留、不部署、不进主链。</text>
+  <text x="50" y="726" font-size="12" fill="#7b8b9b">外部身份：AIC + mTLS 证书；平台名「法前哨」v1.1.0，AIC …6CKYE5.0ZV54U.0IPO。</text>
+  <text x="1450" y="726" text-anchor="end" font-size="11" fill="#9aa8b6">2026-10-21 · 法前哨</text>
+</svg>
+</div>
+</body>
+</html>

@@ -179,12 +179,8 @@ def submit_identity(token: str, real_name: str, id_number: str, id_type: str = "
 
 
 def my_agents(token: str) -> None:
-    with httpx.Client(timeout=TIMEOUT) as client:
-        resp = client.get(
-            f"{BASE}/api/v1/agent/client",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-    _show("GET /api/v1/agent/client", resp)
+    items = _client_agent_items(token)
+    print(json.dumps({"total": len(items), "items": items}, ensure_ascii=False, indent=2))
 
 
 def recent_agents() -> None:
@@ -205,15 +201,34 @@ def cancel_agent(token: str, agent_id: str, confirmed: bool = False) -> None:
     _show(f"POST /api/v1/agent/client/{agent_id}/cancel", resp)
 
 
+def _client_agent_items(token: str) -> list[dict]:
+    """翻完名下全部 Agent（默认每页 10 条；2026-10-20 实测本账号 25 条）。
+
+    ⚠️ 只取第一页会让第 2 页的角色“消失”——`法律咨询主控` 就在第 2 页。
+    删除前按 id 找记录时若只用第一页，会误报“找不到”，从而拒绝执行。
+    """
+    items: list[dict] = []
+    page = 1
+    with httpx.Client(timeout=TIMEOUT) as client:
+        while page <= 100:
+            resp = client.get(
+                f"{BASE}/api/v1/agent/client?page_num={page}&page_size=10",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            page_items = data.get("items") or []
+            items.extend(page_items)
+            total = int(data.get("total") or len(items))
+            if not page_items or len(items) >= total:
+                break
+            page += 1
+    return items
+
+
 def fetch_agent_by_id(token: str, agent_id: str) -> dict | None:
     """在自己名下按 id 查一条 Agent，用于**删除前确认身份**。找不到返回 None。"""
-    with httpx.Client(timeout=TIMEOUT) as client:
-        resp = client.get(
-            f"{BASE}/api/v1/agent/client",
-            headers={"Authorization": f"Bearer {token}"},
-        )
-    resp.raise_for_status()
-    for item in (resp.json().get("items") or []):
+    for item in _client_agent_items(token):
         if item.get("id") == agent_id:
             return item
     return None

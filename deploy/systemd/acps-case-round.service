@@ -20,6 +20,13 @@ WorkingDirectory=/home/ubuntu/witrelate
 Environment=HOME=/home/ubuntu
 Environment=PYTHONUNBUFFERED=1
 
+# 2026-10-20 跨机修正：s1 本机只跑 7 个角色。
+# 证据三叶子（evidence-image/audio/video）已迁到 s2，**不在本机监听**；
+# 不设这个变量时默认取全部 10 个 DEPLOY_ROLES，体检③会把对端端口误报成
+# “本机掉线”，导致每轮 exit_code=1（而 verdict 产物其实都正常落盘）。
+# 远端三个端口的可达性由跨机探针负责，不归本机的 `ss -ltn` 管。
+Environment=CASE_ROUND_LOCAL_ROLES=leader,debate-pro,debate-con,fact-judge,evidence-leader,law-advisor,lead-intake
+
 # ⚠️ 没有 `ExecStartPre=/bin/sleep N` —— 它**不需要**与别的单元错开启动：
 #    错开是为了避免"并发登录 Registry 把彼此会话顶掉"，而那是**开机时**的问题。
 #    本单元由定时器在 09:1x 触发，那时常驻服务早就起来了。

@@ -7896,6 +7896,29 @@ def check_case() -> bool:
         shbody = sh.read_text(encoding="utf-8", errors="replace")
         ibody = installer.read_text(encoding="utf-8", errors="replace")
         problems2: list[str] = []
+        # 2026-10-20 跨机修正：s1 的定时器必须声明**本机角色**。
+        # 不声明就会退回 10 个 DEPLOY_ROLES，把 s2 的三个证据端口误报成掉线。
+        # 期望集合从 DEPLOY_ROLES − REMOTE_EVIDENCE_ROLES 现场派生，不手抄。
+        m_local = re.search(
+            r"^Environment=CASE_ROUND_LOCAL_ROLES=(\S+)\s*$", sbody, re.M
+        )
+        expected_local = tuple(
+            r for r in DEPLOY_ROLES if r not in cr.REMOTE_EVIDENCE_ROLES
+        )
+        if not m_local:
+            problems2.append(
+                "单元没有声明 CASE_ROUND_LOCAL_ROLES ⇒ 跨机后体检③会取全部 "
+                "DEPLOY_ROLES，把 s2 的证据三端口误报成掉线（2026-10-20 实测）"
+            )
+        else:
+            declared = tuple(
+                p for p in re.split(r"[\s,]+", m_local.group(1)) if p
+            )
+            if set(declared) != set(expected_local):
+                problems2.append(
+                    f"单元声明的本机角色 {declared} ≠ 期望 {expected_local}"
+                    "（= DEPLOY_ROLES − 第二台证据三叶子）"
+                )
         # ⚠️ 全部走**行首锚定**（`_unit_line` / `_script_line`）：这两个文件里都写着
         #    解释性注释，而注释里**提到了这些指令名**。子串匹配会被自己的注释骗到。
         if not _unit_line(sbody, r"^Type=oneshot\s*$"):
@@ -7960,6 +7983,14 @@ def check_case() -> bool:
     else:
         print(f"  [通过] 体检③的期望端口现场派生自 DEPLOY_ROLES：{len(want)} 个，"
               f"**不含**软废弃的 {retired_ports}（含进去就会永远报失败）")
+    # 本机口径（跨机后 s1/s2 各不同）：只允许 DEPLOY_ROLES 的子集，且不能为空。
+    local_now = cr.local_roles()
+    if not local_now or not set(local_now) <= set(DEPLOY_ROLES):
+        print(f"  [失败] 本机角色清单不合法：{local_now}")
+        ok = False
+    else:
+        print(f"  [通过] 体检③本机口径：{len(local_now)} 个角色 "
+              f"{list(local_now)}（环境变量 {cr.LOCAL_ROLES_ENV}；未设置时退回全部部署角色）")
 
     # 专项记录不许与发起轮台账同文件（同文件 = 两种记录互相污染，且**都还读得出来**）
     if cr.rounds_ledger_path() == ledger_path():

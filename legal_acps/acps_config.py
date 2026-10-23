@@ -77,7 +77,7 @@ def backend() -> str:
 PORTS = {
     "incitement": 8443,   # Partner A：煽动性识别 + 真伪判定
     "harm": 8444,         # Partner B：社会危害评估
-    "leader": 8445,       # 法律咨询主控（外层 Leader）
+    "leader": 8445,       # 法前哨（外层 Leader；原名“法律咨询主控”）
     "debate-pro": 8446,   # 正方（裁判的 Partner）
     "debate-con": 8447,   # 反方（裁判的 Partner）
     # 2026-09-29 新增：网络裁判。它同时是「法律咨询主控的 Partner」与
@@ -132,11 +132,11 @@ PORTS = {
 #
 # "软废弃"具体指三件事：
 #   · `BUILDERS` 保留 ⇒ 代码仍可构建，`run_agent incitement` 随时能单独起；
-#   · **平台注册已不在**（2026-10-13 实测复核，#126：registry 名下列表与
-#     discovery 都查无此二者，注册何时消失无档案——09-29「删 3 个 demo」
-#     为最大嫌疑）⇒ 重新启用**需要重走注册与审核**（enroll --register-only
-#     → 过审 → 签证书）。安全语义（不部署、不进链路、discovery 召不回）
-#     全部实测成立，主控停用声明降级为纵深防御——防未来同名角色被误派。
+#   · **平台注册仍在**（2026-10-20 分页复查：`tools.list_agents` 共 25 条，
+#     二者都在第 2 页，`APPROVED/active`；2026-10-13 的“注册已不在”是
+#     旧工具只翻第一页造成的误判）⇒ 重新启用**不必重走注册**，但 Discovery
+#     按名字召不回（服务停着/不进索引），安全语义（不部署、不进链路、
+#     discovery 召不回）仍成立；主控停用声明仍是纵深防御。
 #   · 但**不部署、不参与统一启停、不进主控链路** —— 主控改为自己完成这三项判定。
 #
 # ⚠️ 这是**单一事实源**：`scripts/serve.sh` / `scripts/systemd-install.sh` 的部署清单

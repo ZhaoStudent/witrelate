@@ -603,9 +603,12 @@ def build_leader(model, *, self_aic: str | None = None) -> WitAgent:
     """
     return WitAgent(
         id="legal-consult-leader",
-        display_name="法律咨询主控",
-        description="受理待研判文本，协调专家 Partner，并汇总输出社会危害性判定结论。",
-        version="1.0.0",
+        display_name="法前哨",
+        description=(
+            "在成为当事人之前做准备：核查可疑说法、鉴伪图片/音频/视频、"
+            "在覆盖范围内给出法律方向、组织回应演练；每一步留痕。"
+        ),
+        version="1.1.0",
         instructions=LEADER_INSTRUCTIONS,
         model=model,
         capabilities=[submit_final_verdict],

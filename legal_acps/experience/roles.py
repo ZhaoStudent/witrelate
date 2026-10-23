@@ -256,7 +256,7 @@ def accept_case(case: IntakeCase) -> dict:
     return case.model_dump(mode="json")
 
 
-INTAKE_INSTRUCTIONS = """你是反诈体验应用里的**受理官**，对应主链路的「法律咨询主控」。
+INTAKE_INSTRUCTIONS = """你是反诈体验应用里的**受理官**，对应主链路的「法前哨」。
 
 **说话的人是当事人，不是旁观者。** 他会用第一人称跟你说"有人在网上这么说我"。
 你的任务是把**指向他的那条指控**整理成可讨论的形态。

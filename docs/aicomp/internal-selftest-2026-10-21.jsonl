@@ -1,0 +1,6 @@
+{"n": 1, "task_id": "task-selftest-e86852134615", "session_id": "session-selftest-4618ec2c5af5", "sender_aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC", "state": "completed", "note": "internal self-test; not external"}
+{"n": 2, "task_id": "task-selftest-4aaee23648f9", "session_id": "session-selftest-e7fa24e89d00", "sender_aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC", "state": "completed", "note": "internal self-test; not external"}
+{"n": 3, "task_id": "task-selftest-2611c80415b9", "session_id": "session-selftest-f19f077402b5", "sender_aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC", "state": "completed", "note": "internal self-test; not external"}
+{"n": 4, "task_id": "task-selftest-680f4d769d8b", "session_id": "session-selftest-033e8505ad45", "sender_aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC", "state": "completed", "note": "internal self-test; not external"}
+{"n": 5, "task_id": "task-selftest-53442cba762f", "session_id": "session-selftest-901bd4a22230", "sender_aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC", "state": "completed", "note": "internal self-test; not external"}
+{"n": 6, "task_id": "task-selftest-curl-2", "session_id": "session-selftest-curl-2", "sender_aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC", "state": "completed", "note": "internal self-test via curl; not external"}

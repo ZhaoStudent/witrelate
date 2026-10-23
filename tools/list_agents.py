@@ -69,16 +69,45 @@ def login(opener, registry_url: str) -> str:
 
 
 def fetch_agents(opener, registry_url: str, token: str) -> list[dict]:
-    st, txt = _call(opener, f"{registry_url}/api/v1/agent/client", token=token)
-    if st != 200:
-        raise RuntimeError(f"读取 Agent 列表失败 HTTP {st}: {txt[:300]}")
-    d = json.loads(txt)
-    if isinstance(d, list):
-        return d
-    for k in ("items", "data", "list", "agents"):
-        if isinstance(d.get(k), list):
-            return d[k]
-    return []
+    """拉取**全部**名下 Agent。
+
+    ⚠️ 2026-10-20 实测：`/api/v1/agent/client` 默认 `page_size=10`，而本账号
+    已有 25 条记录（含历史已删除的）。旧实现只取第一页 ⇒ 列表里看不到
+    `法前哨`（2026-10-21 由「法律咨询主控」改名），于是被误判成“平台没有这个 Agent”。
+    接口不接受 `limit`/`page_size>10`（422），只能按 `page_num` 翻页。
+    """
+    def _page(page_num: int) -> tuple[list[dict], int]:
+        st, txt = _call(
+            opener,
+            f"{registry_url}/api/v1/agent/client?page_num={page_num}&page_size=10",
+            token=token,
+        )
+        if st != 200:
+            raise RuntimeError(f"读取 Agent 列表失败 HTTP {st}: {txt[:300]}")
+        d = json.loads(txt)
+        if isinstance(d, list):
+            return d, len(d)
+        for k in ("items", "data", "list", "agents"):
+            if isinstance(d.get(k), list):
+                return d[k], int(d.get("total") or len(d[k]))
+        return [], 0
+
+    items, total = _page(1)
+    page = 2
+    seen = {str(a.get("id") or a.get("aic") or i) for i, a in enumerate(items)}
+    while len(items) < total and page <= 100:
+        more, _ = _page(page)
+        if not more:
+            break
+        for a in more:
+            key = str(a.get("id") or a.get("aic") or "")
+            if key and key in seen:
+                continue
+            if key:
+                seen.add(key)
+            items.append(a)
+        page += 1
+    return items
 
 
 def _endpoints(item: dict) -> list[str]:

@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>法前哨 · 手机端界面草案</title>
+<style>
+  :root{
+    --navy:#123B5D; --blue:#1F4E79; --teal:#2A9D8F; --orange:#E9A23B;
+    --ink:#1F2D3A; --muted:#6B7A8A; --line:#E1E8EF; --bg:#F5F7FA;
+    --surface:#FFFFFF; --soft:#EEF3F8; --soft2:#E8F1FB; --danger:#C05A4A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",sans-serif;color:var(--ink)}
+  .phone{width:390px;height:844px;background:var(--bg);position:relative;overflow:hidden}
+  .status{height:38px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:11px;color:#5B6B7C;background:transparent}
+  .status b{font-weight:700}
+  .appbar{height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 16px;background:#fff;border-bottom:1px solid var(--line)}
+  .appbar .left{display:flex;align-items:center;gap:8px;min-width:0}
+  .back{font-size:17px;color:var(--navy);width:20px}
+  .title{font-size:15px;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sub{font-size:10px;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .badge{font-size:9px;font-weight:700;padding:3px 7px;border-radius:99px;background:#E6F4F0;color:#1F7A6F;white-space:nowrap}
+  .badge.local{background:#EEF1F4;color:#5E6D7A}
+  .scroll{position:absolute;top:92px;bottom:64px;left:0;right:0;overflow:hidden;padding:12px 14px}
+  .scroll.has-actions{bottom:122px}
+  .tabbar{position:absolute;bottom:0;left:0;right:0;height:64px;background:#fff;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:6px}
+  .tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:9px;color:#8A99A8}
+  .tab.active{color:var(--navy);font-weight:700}
+  .tab .ico{font-size:15px;line-height:1}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px}
+  .h1{font-size:25px;font-weight:800;color:var(--navy);line-height:1.25}
+  .h2{font-size:15px;font-weight:700;color:var(--navy)}
+  .h3{font-size:12px;font-weight:700;color:var(--ink)}
+  .muted{color:var(--muted)}
+  .tiny{font-size:9.5px}
+  .small{font-size:11px}
+  .tag{display:inline-flex;align-items:center;gap:4px;padding:3px 7px;border-radius:99px;font-size:9px;font-weight:700}
+  .tag.teal{background:#E6F4F0;color:#1F7A6F}
+  .tag.orange{background:#FFF4E2;color:#8A5A14}
+  .tag.blue{background:var(--soft2);color:var(--blue)}
+  .tag.gray{background:#EEF1F4;color:#5E6D7A}
+  .tag.red{background:#FBEAE7;color:#9B3E32}
+  .btn{height:38px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:6px}
+  .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  .btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}
+  .btn.ghost{background:transparent}
+  /* m1 */
+  .brandline{display:flex;align-items:center;gap:9px;padding:4px 2px 14px}
+  .mark{width:7px;height:24px;border-radius:2px;background:var(--teal)}
+  .brandline b{font-size:18px;color:var(--navy);letter-spacing:.5px}
+  .lead{font-size:11.5px;color:var(--muted);line-height:1.65;margin-top:6px}
+  .paste{margin-top:16px;padding:14px}
+  .paste .box{background:#F8FAFC;border:1px dashed #C8D6E2;border-radius:10px;padding:12px;font-size:11px;color:#8A99A8;line-height:1.7;min-height:92px}
+  .paste .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .recent{margin-top:14px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between}
+  .recent b{display:block;font-size:12px;color:var(--ink);margin-top:3px}
+  .mode-note{margin-top:14px;display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:#FFF8EC;border:1px solid #F0D7A9;border-radius:11px;font-size:9.5px;color:#8A6B3F;line-height:1.55}
+  /* m2 */
+  .case-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin:2px 0 10px}
+  .case-head .h2{font-size:16px;line-height:1.3}
+  .opp{margin-top:2px;padding:12px 13px}
+  .opp-top{display:flex;align-items:center;gap:12px}
+  .stack{position:relative;width:42px;height:58px;flex:0 0 42px}
+  .cardback{position:absolute;width:38px;height:52px;border-radius:6px;background:linear-gradient(135deg,#123B5D,#2B5C8A);border:1px solid #0F304D;box-shadow:0 2px 4px rgba(18,59,93,.18);left:0;top:4px;transform:rotate(-4deg)}
+  .cardback:after{content:"?";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#8FB3CC;font-size:17px;font-weight:700}
+  .opp-copy{min-width:0}
+  .opp-copy .t{font-size:13px;font-weight:700;color:var(--navy)}
+  .opp-copy .d{font-size:9.5px;color:var(--muted);margin-top:3px;line-height:1.5}
+  .claims{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .claim{border:1px dashed #E0B76B;background:#FFFAF0;color:#7A5A32;border-radius:8px;padding:5px 8px;font-size:9.5px;line-height:1.35}
+  .played{margin-top:10px;border-top:1px dashed #E6EDF3;padding-top:9px;display:flex;align-items:center;gap:8px}
+  .played .none{font-size:9.5px;color:#9AA8B6}
+  .chat{margin-top:10px;padding:12px 13px;background:#101A24;border-radius:14px;color:#D7E6F3}
+  .chat .who{font-size:9px;color:#8FA7B8;margin-bottom:6px}
+  .msg{font-size:11px;line-height:1.55;margin-bottom:8px}
+  .msg:last-child{margin-bottom:0}
+  .msg .hl{background:#3B2E16;color:#F4C97B;padding:1px 3px;border-radius:3px}
+  .hand-head{display:flex;align-items:center;justify-content:space-between;margin:14px 0 7px}
+  .hand{display:flex;gap:8px;overflow:hidden}
+  .hcard{flex:0 0 158px;background:#fff;border:1px solid #BFDED8;border-radius:12px;padding:10px;position:relative}
+  .hcard .k{font-size:8px;font-weight:700;color:#1F7A6F;letter-spacing:.5px}
+  .hcard .t{font-size:11.5px;font-weight:700;color:var(--ink);line-height:1.35;margin-top:4px}
+  .hcard .m{font-size:9px;color:var(--muted);margin-top:6px}
+  .actions{position:absolute;bottom:64px;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:10px 14px 12px;display:grid;grid-template-columns:1.2fr 1fr .8fr;gap:8px}
+  /* m3 sheet */
+  .dim{background:#0F1C27}
+  .sheet-wrap{position:absolute;inset:0;background:rgba(10,20,30,.55)}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:16px 16px 18px;height:68%;overflow:hidden}
+  .grab{width:36px;height:4px;border-radius:99px;background:#D5DEE7;margin:0 auto 12px}
+  .sheet-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+  .playcard{border:1px solid #E6EDF3;border-radius:12px;padding:12px;background:#F8FAFC}
+  .playcard .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .playcard .name{font-size:14px;font-weight:800;color:var(--navy)}
+  .check{margin-top:10px;background:#FFF8EC;border:1px solid #F0D7A9;border-radius:9px;padding:9px 10px;font-size:9.5px;color:#7A5A32;line-height:1.55}
+  .check b{color:#7A4A12}
+  .fact{margin-top:9px;font-size:9.5px;color:var(--muted);line-height:1.6}
+  .sheet-actions{position:absolute;left:16px;right:16px;bottom:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .sheet-actions .wide{grid-column:1 / -1}
+  /* m4 */
+  .sum-card{padding:13px;margin-bottom:10px}
+  .sum-card .k{font-size:9px;color:var(--muted)}
+  .sum-card .v{font-size:19px;font-weight:800;color:var(--navy);margin-top:3px;line-height:1.2}
+  .sum-card .d{font-size:9.5px;color:var(--muted);margin-top:4px;line-height:1.5}
+  .reveal{background:#FFF8EC;border:1px solid #F0D7A9;border-radius:12px;padding:12px 13px;margin:10px 0}
+  .reveal .t{font-size:10px;font-weight:800;color:#7A4A12}
+  .reveal .d{font-size:9.5px;color:#7A5A32;line-height:1.6;margin-top:5px}
+  .step{display:flex;gap:8px;padding:9px 0;border-bottom:1px dashed #E6EDF3;font-size:10.5px;line-height:1.5}
+  .step:last-child{border-bottom:0}
+  .step .n{width:18px;height:18px;border-radius:50%;background:var(--teal);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 18px}
+  .export-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+  .footnote{font-size:8.5px;color:#9AA8B6;line-height:1.5;margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- m1 import -->
+<section class="phone" id="m1">
+  <div class="status"><b>22:07</b><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+  <div class="appbar">
+    <div class="left"><div class="title">案卷</div></div>
+    <span class="badge local">本地体验</span>
+  </div>
+  <div class="scroll">
+    <div class="brandline"><span class="mark"></span><b>法前哨</b></div>
+    <div class="h1">从一条消息<br>开始准备。</div>
+    <div class="lead">别人在群里说你，你不需要立刻回。先把事实、证据、话术准备好。</div>
+    <div class="card paste">
+      <div class="h3">把群里的原话粘贴进来</div>
+      <div class="box">例如：有人在业主群说我私吞了维修基金的回扣，他说手里有转账记录和聊天截图……</div>
+      <div class="row">
+        <button class="btn">粘贴</button>
+        <button class="btn">导入截图</button>
+      </div>
+    </div>
+    <div class="card recent">
+      <div><div class="tiny muted">继续上次</div><b>业主群 · 维修基金回扣</b></div>
+      <button class="btn ghost">打开 →</button>
+    </div>
+    <div class="mode-note"><span>ⓘ</span><span>本地体验不连接梧桐平台，不会产生真实访问记录。所有案例为虚构。</span></div>
+  </div>
+  <div class="tabbar">
+    <div class="tab active"><span class="ico">◈</span>案卷</div>
+    <div class="tab"><span class="ico">▤</span>牌桌</div>
+    <div class="tab"><span class="ico">☰</span>清单</div>
+    <div class="tab"><span class="ico">◎</span>我的</div>
+  </div>
+</section>
+
+<!-- m2 table -->
+<section class="phone" id="m2">
+  <div class="status"><b>22:19</b><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+  <div class="appbar">
+    <div class="left"><div class="back">‹</div><div><div class="title">业主群 · 维修基金回扣</div><div class="sub">3 轮 · 准备中</div></div></div>
+    <span class="badge local">本地体验</span>
+  </div>
+  <div class="scroll has-actions">
+    <div class="case-head"><div><div class="h2">牌桌</div><div class="tiny muted" style="margin-top:3px">你看到的，永远不是他全部的牌。</div></div><span class="tag orange">他还没出完</span></div>
+
+    <div class="card opp">
+      <div class="opp-top">
+        <div class="stack"><div class="cardback"></div></div>
+        <div class="opp-copy"><div class="t">他手里还有牌</div><div class="d">数量未知 · 你只看到他打出的和他说出来的</div></div>
+      </div>
+      <div class="claims">
+        <span class="claim">他说：有转账记录</span>
+        <span class="claim">他说：有聊天截图</span>
+        <span class="claim">他说：要你贴半年流水</span>
+      </div>
+      <div class="played"><span class="tag gray">已打出</span><span class="none">还没有。他目前只是在“说”。</span></div>
+    </div>
+
+    <div class="chat">
+      <div class="who">业主群（48）· 22:17</div>
+      <div class="msg">“你要真没拿，就把这半年的银行卡流水贴出来，让全群的人一起看看。”</div>
+      <div class="msg muted" style="color:#8FA7B8">群里有人跟着起哄；没有人看到转账记录。</div>
+    </div>
+
+    <div class="hand-head"><div class="h3">你的手牌 <span class="tiny muted">（只有你知道）</span></div><span class="tag teal">2 张</span></div>
+    <div class="hand">
+      <div class="hcard"><div class="k">你的牌 · 未出示</div><div class="t">当晚在杭州出差</div><div class="m">登机牌 / 酒店记录</div></div>
+      <div class="hcard"><div class="k">你的牌 · 未出示</div><div class="t">当晚时间线</div><div class="m">22:07 群聊 / 22:19 保存</div></div>
+    </div>
+    <div class="tiny muted" style="margin-top:12px">22:17 他要求你贴流水 · 22:19 你保存了群聊 · 还没有出牌</div>
+    <div class="card" style="margin-top:10px;padding:10px 12px">
+      <div class="tiny muted" style="margin-bottom:5px">本轮记录</div>
+      <div class="small" style="line-height:1.6">22:17 他声称有两张，未出示<br>22:19 你保存群聊，未回应</div>
+    </div>
+  </div>
+  <div class="actions">
+    <button class="btn primary">回应</button>
+    <button class="btn">先看</button>
+    <button class="btn ghost">亮牌</button>
+  </div>
+  <div class="tabbar">
+    <div class="tab"><span class="ico">◈</span>案卷</div>
+    <div class="tab active"><span class="ico">▤</span>牌桌</div>
+    <div class="tab"><span class="ico">☰</span>清单</div>
+    <div class="tab"><span class="ico">◎</span>我的</div>
+  </div>
+</section>
+
+<!-- m3 opponent play -->
+<section class="phone dim" id="m3">
+  <div class="status" style="color:#8FA7B8"><b>22:21</b><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+  <div class="appbar" style="background:#0F1C27;border-color:#1D3345">
+    <div class="left"><div class="back" style="color:#D7E6F3">‹</div><div><div class="title" style="color:#fff">他打出了一张牌</div><div class="sub" style="color:#8FA7B8">你只看到这一张</div></div></div>
+    <span class="badge" style="background:#3B2E16;color:#F4C97B">第 3 轮</span>
+  </div>
+  <div class="sheet-wrap">
+    <div class="sheet">
+      <div class="grab"></div>
+      <div class="sheet-head"><div><div class="h2">对方打出一张牌</div><div class="tiny muted" style="margin-top:3px">“聊天截图” · 他之前声称有两张</div></div><span class="tag orange">已打出</span></div>
+      <div class="playcard">
+        <div class="top"><div class="name">聊天截图</div><span class="tag gray">未核验</span></div>
+        <div class="small muted" style="margin-top:6px;line-height:1.55">画面是一段群聊，头像和昵称都打了码；没有原始载体、没有导出信息。</div>
+        <div class="check"><b>可核验性：低。</b><br>截图可以编辑、拼接、重拍；这张图不能单独证明“转账记录”存在。</div>
+        <div class="fact"><b>它改变了什么：</b>他从“声称有”变成了“打出一张”。<br><b>它没有改变什么：</b>你仍然不知道他手里还有几张、有没有原件。</div>
+      </div>
+      <div class="tiny muted" style="margin-top:10px">已加入时间线 · 22:21</div>
+      <div class="tiny muted" style="margin-top:8px;line-height:1.55">你仍然不知道：他手里还有几张、有没有原件、下一张会是什么。</div>
+      <div class="h3" style="margin-top:14px">他可能还有</div>
+      <div class="claims" style="margin-top:6px">
+        <span class="claim">原件？</span><span class="claim">转账记录？</span><span class="claim">另一张截图？</span>
+      </div>
+      <div class="check" style="margin-top:10px"><b>不要做：</b>不要因为一张截图就自证；不要按他的要求贴半年流水。</div>
+      <div class="sheet-actions">
+        <button class="btn">要求出示原件</button>
+        <button class="btn">先记录，不回应</button>
+        <button class="btn primary wide">用我的一张牌回应</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- m4 report -->
+<section class="phone" id="m4">
+  <div class="status"><b>22:31</b><span>5G&nbsp;&nbsp;▮▮▮</span></div>
+  <div class="appbar">
+    <div class="left"><div class="back">‹</div><div><div class="title">准备清单</div><div class="sub">业主群 · 维修基金回扣</div></div></div>
+    <span class="badge">已完成</span>
+  </div>
+  <div class="scroll has-actions">
+    <div class="card sum-card"><div class="k">目前能否认定真假</div><div class="v">无法判定</div><div class="d">双方关键证据都没有出示；这是一个合法结论，不是失败。</div></div>
+    <div class="card sum-card"><div class="k">举证责任</div><div class="v">谁主张谁举证</div><div class="d">要求你“自证清白”，属于举证倒置。</div></div>
+    <div class="reveal"><div class="t">演练复盘 · 不是现实</div><div class="d">他实际有 3 张牌；只打出 1 张；声称 2 张；有 1 张从未提及。<br>你刚才只看到“打出的”和“说出来的”——这就是信息差。</div></div>
+    <div class="h3" style="margin:4px 0 6px">下一步（准备清单）</div>
+    <div class="card" style="padding:12px 13px">
+      <div class="step"><span class="n">1</span><div>保存群聊原文、时间、群成员可见范围</div></div>
+      <div class="step"><span class="n">2</span><div>固定出差凭证：登机牌、酒店记录</div></div>
+      <div class="step"><span class="n">3</span><div>先演练一次回应，不急着在群里自证</div></div>
+    </div>
+    <div class="export-row">
+      <button class="btn">复制摘要</button>
+      <button class="btn primary">导出准备清单</button>
+    </div>
+    <div class="footnote">演示案例为虚构；输出为辅助研判，不构成法律意见。</div>
+    <div class="footnote">导出包含：结论 / 证据清单 / 法律方向 / 溯源链接 / 免责声明。</div>
+  </div>
+  <div class="actions" style="grid-template-columns:1fr 1fr">
+    <button class="btn">返回牌桌</button>
+    <button class="btn primary">分享给朋友</button>
+  </div>
+  <div class="tabbar">
+    <div class="tab"><span class="ico">◈</span>案卷</div>
+    <div class="tab"><span class="ico">▤</span>牌桌</div>
+    <div class="tab active"><span class="ico">☰</span>清单</div>
+    <div class="tab"><span class="ico">◎</span>我的</div>
+  </div>
+</section>
+
+</body>
+</html>

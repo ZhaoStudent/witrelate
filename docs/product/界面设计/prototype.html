@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>法前哨 · 产品界面草案</title>
+<style>
+  :root{
+    --navy:#123B5D; --blue:#1F4E79; --teal:#2A9D8F; --orange:#E9A23B;
+    --ink:#1F2D3A; --muted:#6B7A8A; --line:#E1E8EF; --bg:#F5F7FA;
+    --surface:#FFFFFF; --soft:#EEF3F8; --soft2:#E8F1FB; --danger:#C05A4A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#fff;font-family:"Microsoft YaHei","PingFang SC","Noto Sans CJK SC",sans-serif;color:var(--ink)}
+  .screen{width:1440px;height:900px;background:var(--bg);position:relative;overflow:hidden}
+  .muted{color:var(--muted)}
+  .tiny{font-size:11px}
+  .small{font-size:12px}
+  .h1{font-size:30px;font-weight:700;color:var(--navy);letter-spacing:.2px}
+  .h2{font-size:18px;font-weight:700;color:var(--navy)}
+  .h3{font-size:14px;font-weight:700;color:var(--ink)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:12px}
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;font-size:11px;font-weight:600}
+  .tag.teal{background:#E6F4F0;color:#1F7A6F}
+  .tag.orange{background:#FFF4E2;color:#8A5A14}
+  .tag.blue{background:var(--soft2);color:var(--blue)}
+  .tag.gray{background:#EEF1F4;color:#5E6D7A}
+  .tag.red{background:#FBEAE7;color:#9B3E32}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:38px;padding:0 16px;border-radius:9px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#fff;color:var(--ink)}
+  .btn.primary{background:var(--navy);border-color:var(--navy);color:#fff}
+  .btn.teal{background:var(--teal);border-color:var(--teal);color:#fff}
+  .btn.ghost{background:transparent}
+  .icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border-radius:5px;background:var(--soft2);color:var(--blue);font-size:12px;font-weight:700}
+  /* sidebar */
+  .app{display:grid;grid-template-columns:220px 1fr;height:900px}
+  .sidebar{background:#0F304D;color:#D7E6F3;padding:22px 16px;position:relative}
+  .brand{display:flex;align-items:center;gap:10px;padding:2px 6px 26px}
+  .mark{width:8px;height:30px;border-radius:2px;background:var(--teal)}
+  .brand b{font-size:21px;color:#fff;letter-spacing:.5px}
+  .nav{display:flex;flex-direction:column;gap:4px}
+  .nav .item{height:40px;border-radius:8px;display:flex;align-items:center;gap:10px;padding:0 10px;font-size:13px;color:#BBD1E2;background:transparent;border:0;margin:0}
+  .nav .item.active{background:#1A4667;color:#fff}
+  .nav .dot{width:6px;height:6px;border-radius:50%;background:#6E8DA5}
+  .nav .item.active .dot{background:var(--teal)}
+  .side-bottom{position:absolute;bottom:22px;left:16px;right:16px}
+  .mode{display:flex;align-items:center;gap:8px;background:#123B5D;border:1px solid #255273;border-radius:10px;padding:10px;font-size:11px;color:#D7E6F3}
+  .mode .led{width:7px;height:7px;border-radius:50%;background:var(--teal)}
+  .main{display:flex;flex-direction:column;height:900px}
+  .topbar{height:72px;flex:0 0 72px;border-bottom:1px solid var(--line);background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px}
+  .crumbs{font-size:12px;color:var(--muted)}
+  .crumbs b{color:var(--ink);font-size:14px;font-weight:600;margin-left:8px}
+  .top-actions{display:flex;gap:10px;align-items:center}
+  .content{padding:22px 28px;overflow:hidden;flex:1;min-height:0}
+  .ws-grid{display:grid;grid-template-columns:1fr 280px;gap:18px}
+  .cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .col{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;min-height:560px}
+  /* screen 1 */
+  .onboard{display:grid;grid-template-columns:520px 1fr;height:900px}
+  .ob-left{background:var(--navy);color:#fff;padding:54px 56px;position:relative}
+  .ob-left .mark{height:42px;width:10px}
+  .ob-left .logo{display:flex;align-items:center;gap:14px;font-size:34px;font-weight:800;letter-spacing:1px}
+  .ob-left .sub{margin-top:20px;font-size:17px;line-height:1.7;color:#C9DDEC;max-width:390px}
+  .ob-left .cap{margin-top:54px;display:flex;flex-direction:column;gap:14px}
+  .ob-left .cap .row{display:flex;gap:12px;align-items:flex-start}
+  .ob-left .cap .num{width:24px;height:24px;border-radius:50%;background:#1A4667;color:var(--teal);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 24px}
+  .ob-left .cap .t{font-size:13px;color:#E6F0F8;font-weight:600}
+  .ob-left .cap .d{font-size:11px;color:#9FB8CA;margin-top:3px}
+  .ob-left .foot{position:absolute;bottom:34px;left:56px;font-size:10px;color:#7F9DB3}
+  .ob-right{padding:54px 52px;background:var(--bg)}
+  .ob-right .kicker{font-size:11px;font-weight:700;color:var(--teal);letter-spacing:1.4px}
+  .ob-right h1{margin:8px 0 6px;font-size:34px;color:var(--navy)}
+  .ob-right .lead{font-size:13px;color:var(--muted);line-height:1.7;max-width:640px}
+  .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:30px}
+  .mode-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px;position:relative;min-height:250px}
+  .mode-card.recommend{border-color:#BFDED8;box-shadow:0 0 0 3px #E6F4F0}
+  .mode-card .badge{position:absolute;right:16px;top:16px}
+  .mode-card h2{margin:2px 0 6px;font-size:19px;color:var(--navy)}
+  .mode-card p{margin:0;font-size:12px;color:var(--muted);line-height:1.65;min-height:56px}
+  .mode-card .meta{margin-top:14px;font-size:11px;color:#8A99A8;line-height:1.8}
+  .mode-card .btn{margin-top:18px;width:100%}
+  .recent{margin-top:26px;display:flex;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+  .recent .l{font-size:12px;color:var(--muted)}
+  .recent b{display:block;font-size:13px;color:var(--ink);margin-top:3px}
+  /* screen 2 */
+  .ws-grid{display:grid;grid-template-columns:1fr 280px;gap:18px;height:100%}
+  .cols{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+  .col{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;min-height:560px}
+  .col .head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+  .col .head b{font-size:13px;color:var(--navy)}
+  .col .hint{font-size:10.5px;color:var(--muted);margin:2px 0 12px}
+  .item{background:#F8FAFC;border:1px solid #E6EDF3;border-radius:9px;padding:10px 11px;margin-bottom:9px}
+  .item .t{font-size:12px;color:var(--ink);line-height:1.5}
+  .item .m{font-size:10px;color:#8A99A8;margin-top:6px;display:flex;gap:6px;align-items:center}
+  .item.dark{background:#101A24;border-color:#101A24;color:#D7E6F3}
+  .item.dark .t{color:#EAF2F8}
+  .item.dark .m{color:#8FA7B8}
+  .add{border:1px dashed #C8D6E2;border-radius:9px;padding:10px;text-align:center;font-size:11px;color:#7D8C9B;background:transparent}
+  .rail{display:flex;flex-direction:column;gap:14px}
+  .score{padding:16px}
+  .score .n{font-size:34px;font-weight:800;color:var(--teal);line-height:1}
+  .score .d{font-size:11px;color:var(--muted);margin-top:6px}
+  .bar{height:7px;border-radius:99px;background:#E8EEF4;margin-top:12px;overflow:hidden}
+  .bar i{display:block;height:100%;width:62%;background:var(--teal)}
+  .check{display:flex;gap:8px;font-size:11px;color:var(--muted);margin-top:9px;line-height:1.45}
+  .check .ok{color:var(--teal);font-weight:700}
+  .warn{background:#FFF8EC;border:1px solid #F0D7A9;border-radius:12px;padding:13px}
+  .warn b{font-size:12px;color:#7A4A12}
+  .warn p{margin:5px 0 0;font-size:11px;color:#8A6B3F;line-height:1.6}
+  .actionbar{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+  .actionbar .left{font-size:11px;color:var(--muted)}
+  .actionbar .right{display:flex;gap:10px}
+  /* screen 3 */
+  .run-grid{display:grid;grid-template-columns:190px 1fr 290px;gap:18px;height:100%}
+  .stepper{padding:16px 14px;display:flex;flex-direction:column}
+  .step{display:flex;gap:10px;padding:11px 0;border-bottom:1px dashed #E6EDF3;position:relative}
+  .step:last-child{border-bottom:0}
+  .step .n{width:22px;height:22px;border-radius:50%;background:#EEF3F8;color:#7D8C9B;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex:0 0 22px}
+  .step.done .n{background:var(--teal);color:#fff}
+  .step.active .n{background:var(--navy);color:#fff}
+  .step .t{font-size:11.5px;color:var(--ink);font-weight:600}
+  .step .d{font-size:9.5px;color:var(--muted);margin-top:3px}
+  .map{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px;height:100%;display:flex;flex-direction:column}
+  .map-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .lanes{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+  .lane{border-radius:10px;padding:11px;min-height:260px;border:1px solid}
+  .lane.shared{background:#EAF4FF;border-color:#C9DEF5}
+  .lane.theirs{background:#FFF4E2;border-color:#F0D7A9}
+  .lane.mine{background:#E9F6F2;border-color:#BFDED8}
+  .lane h3{margin:0;font-size:11px;color:var(--navy)}
+  .lane .sub{font-size:9px;color:var(--muted);margin:3px 0 9px;line-height:1.4}
+  .bubble{background:#fff;border:1px solid rgba(0,0,0,.06);border-radius:9px;padding:8px;margin-bottom:7px;font-size:10.5px;line-height:1.5;color:#33475B}
+  .bubble.dark{background:#101A24;border-color:#101A24;color:#D7E6F3}
+  .chat-panel{background:#101A24;border-radius:12px;padding:14px;margin-top:12px;color:#D7E6F3}
+  .chat-panel .who{font-size:10px;color:#8FA7B8;margin-bottom:6px}
+  .msg{font-size:11px;line-height:1.6}
+  .msg .hl{background:#3B2E16;color:#F4C97B;padding:1px 3px;border-radius:3px}
+  .tip{padding:14px;display:flex;flex-direction:column}
+  .tip h3{margin:0 0 10px;font-size:13px;color:var(--navy)}
+  .tip p{margin:0 0 10px;font-size:11px;color:var(--muted);line-height:1.65}
+  /* screen 4 */
+  .summary{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+  .sum{padding:14px}
+  .sum .k{font-size:10px;color:var(--muted)}
+  .sum .v{font-size:16px;font-weight:700;color:var(--navy);margin-top:5px}
+  .sum .n{font-size:10px;color:#8A99A8;margin-top:4px}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:14px}
+  .tab{padding:10px 14px;font-size:11.5px;color:var(--muted);border-bottom:2px solid transparent}
+  .tab.active{color:var(--navy);font-weight:700;border-color:var(--teal)}
+  .report-grid{display:grid;grid-template-columns:1.25fr .75fr;gap:16px}
+  .block{padding:16px}
+  .block h3{margin:0 0 10px;font-size:12px;color:var(--navy)}
+  .kv{display:flex;gap:10px;font-size:11px;line-height:1.6;margin-bottom:9px}
+  .kv .k{width:78px;color:var(--muted);flex:0 0 78px}
+  .kv .v{color:var(--ink)}
+  .timeline{border-left:2px solid #DDE7EF;margin-left:6px;padding-left:14px}
+  .tl{position:relative;margin-bottom:12px;font-size:10.5px;color:var(--muted);line-height:1.5}
+  .tl:before{content:"";position:absolute;left:-20px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--teal);border:2px solid #fff;box-shadow:0 0 0 1px #DDE7EF}
+  .tl b{display:block;color:var(--ink);font-size:11px}
+  .export{display:flex;gap:8px;margin-top:12px}
+  /* screen 5 */
+  .plat-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .plat{padding:18px}
+  .plat .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .status{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#1F7A6F}
+  .status .led{width:8px;height:8px;border-radius:50%;background:var(--teal)}
+  .field{display:flex;justify-content:space-between;gap:10px;border-bottom:1px dashed #E6EDF3;padding:9px 0;font-size:11px}
+  .field .k{color:var(--muted)}
+  .field .v{color:var(--ink);text-align:right;max-width:66%;word-break:break-all}
+  .table{width:100%;border-collapse:collapse;font-size:10.5px}
+  .table th{text-align:left;color:var(--muted);font-weight:600;padding:8px 6px;border-bottom:1px solid var(--line)}
+  .table td{padding:8px 6px;border-bottom:1px dashed #E6EDF3;color:var(--ink)}
+  .danger{border-color:#F0C9C2;background:#FFF7F5}
+  .footer-note{position:absolute;bottom:14px;left:248px;font-size:9px;color:#9AA8B6}
+</style>
+</head>
+<body>
+
+<!-- 1. onboarding -->
+<section class="screen" id="s1">
+  <div class="onboard">
+    <div class="ob-left">
+      <div class="logo"><span class="mark"></span>法前哨</div>
+      <div class="sub">在成为当事人之前，<br>把事实、证据、话术准备好。</div>
+      <div class="cap">
+        <div class="row"><span class="num">01</span><div><div class="t">事实</div><div class="d">这个说法，能不能核验？</div></div></div>
+        <div class="row"><span class="num">02</span><div><div class="t">证据</div><div class="d">图 / 音频 / 视频，有没有被动过？</div></div></div>
+        <div class="row"><span class="num">03</span><div><div class="t">法律方向</div><div class="d">下一步做什么，不该做什么？</div></div></div>
+        <div class="row"><span class="num">04</span><div><div class="t">话术</div><div class="d">对方在带什么节奏？</div></div></div>
+      </div>
+      <div class="foot">法前哨 v1.0 · 产品界面草案 · 2026-10-22</div>
+    </div>
+    <div class="ob-right">
+      <div class="kicker">FIRST RUN</div>
+      <h1>你准备怎么开始？</h1>
+      <div class="lead">本地体验不连接平台，不会产生真实访问；连接到梧桐平台后，才会出现 AIC、发现与外部调用记录。两种模式在界面上始终可分辨。</div>
+      <div class="mode-grid">
+        <div class="mode-card recommend">
+          <span class="tag teal badge">推荐先看这个</span>
+          <h2>本地体验</h2>
+          <p>不配置 AIC、不上传证书，3 分钟走完一个虚构案例。适合第一次了解产品、录屏和答辩演示。</p>
+          <div class="meta">无需 API Key · 使用 stub 或自己的 Key<br>不会产生平台访问记录</div>
+          <button class="btn teal">开始体验</button>
+        </div>
+        <div class="mode-card">
+          <span class="tag gray badge">需要配置</span>
+          <h2>连接梧桐平台</h2>
+          <p>使用真实 AIC 与 mTLS 证书，通过叮当或外部 Agent 调用法前哨。会留下任务、发现和访问记录。</p>
+          <div class="meta">需要 AIC / endpoint / 客户端证书<br>会产生真实平台访问</div>
+          <button class="btn">配置连接</button>
+        </div>
+      </div>
+      <div class="recent">
+        <div class="l">继续上次<b>业主群 · 维修基金回扣</b></div>
+        <button class="btn ghost">打开 →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. workspace -->
+<section class="screen" id="s2">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="mark"></span><b>法前哨</b></div>
+      <div class="nav">
+        <div class="item active"><span class="dot"></span>工作台</div>
+        <div class="item"><span class="dot"></span>案件</div>
+        <div class="item"><span class="dot"></span>准备清单</div>
+        <div class="item"><span class="dot"></span>溯源</div>
+        <div class="item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="side-bottom">
+        <div class="mode"><span class="led"></span><div><b>本地体验</b><br><span style="color:#9FB8CA">不连接平台</span></div></div>
+      </div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div class="crumbs">工作台 / 案件<b>业主群 · 维修基金回扣</b></div>
+        <div class="top-actions"><span class="tag orange">准备中</span><button class="btn">保存草稿</button><button class="btn primary">开始演练</button></div>
+      </div>
+      <div class="content">
+        <div class="ws-grid">
+          <div>
+            <div class="cols">
+              <div class="col">
+                <div class="head"><b>公开战场</b><span class="tag blue">群内可见</span></div>
+                <div class="hint">群里所有人都看得到的话</div>
+                <div class="item"><div class="t">“有人在业主群说你私吞了维修基金的回扣。”</div><div class="m">公开 · 2026-10-21 22:07</div></div>
+                <div class="item"><div class="t">“他说手里有转账记录和聊天截图。”</div><div class="m">公开 · 指控方声称</div></div>
+                <div class="item"><div class="t">“群里已经有人开始骂了。”</div><div class="m">公开 · 情绪升级</div></div>
+                <div class="add">+ 添加公开信息</div>
+              </div>
+              <div class="col">
+                <div class="head"><b>对方的牌</b><span class="tag orange">他声称</span></div>
+                <div class="hint">他声称有，但还没出示</div>
+                <div class="item"><div class="t">转账记录</div><div class="m">未出示 · 无法核验</div></div>
+                <div class="item"><div class="t">聊天截图</div><div class="m">未出示 · 无法核验</div></div>
+                <div class="item"><div class="t">“你要真没拿，就把半年流水贴出来。”</div><div class="m">公开 · 举证倒置</div></div>
+                <div class="add">+ 添加对方材料</div>
+              </div>
+              <div class="col">
+                <div class="head"><b>你的底牌</b><span class="tag teal">只有你知道</span></div>
+                <div class="hint">对方看不到，但你需要先固定</div>
+                <div class="item"><div class="t">当晚在杭州出差</div><div class="m">登机牌 / 酒店记录 · 未出示</div></div>
+                <div class="item dark"><div class="t">先不自证；把材料按时间线整理</div><div class="m">策略草稿 · 仅自己可见</div></div>
+                <div class="item"><div class="t">待补：群成员可见范围</div><div class="m">待补 · 影响范围</div></div>
+                <div class="add">+ 添加你的材料</div>
+              </div>
+            </div>
+            <div class="actionbar">
+              <div class="left">已记录 6 条 · 最近保存 22:19</div>
+              <div class="right"><button class="btn">导出准备清单</button><button class="btn primary">开始演练</button></div>
+            </div>
+          </div>
+          <div class="rail">
+            <div class="card score">
+              <div class="k tiny muted">准备度</div>
+              <div class="n">62%</div>
+              <div class="bar"><i></i></div>
+              <div class="check"><span class="ok">✓</span>时间线已建立</div>
+              <div class="check"><span class="ok">✓</span>公开说法已拆成命题</div>
+              <div class="check"><span style="color:#C08A2E">○</span>对方材料还没固定</div>
+              <div class="check"><span style="color:#C08A2E">○</span>还没做一次演练</div>
+            </div>
+            <div class="warn">
+              <b>风险提示</b>
+              <p>对方要求你“自证清白”时，先别急着解释。谁主张谁举证；先固定他公开指控的原文。</p>
+            </div>
+            <div class="card" style="padding:14px">
+              <div class="h3" style="margin-bottom:8px">下一步建议</div>
+              <div class="small muted" style="line-height:1.7">1. 保存群聊原文与时间<br>2. 整理出差凭证<br>3. 先演练，再决定回不回</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 3. run -->
+<section class="screen" id="s3">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="mark"></span><b>法前哨</b></div>
+      <div class="nav">
+        <div class="item"><span class="dot"></span>工作台</div>
+        <div class="item active"><span class="dot"></span>演练</div>
+        <div class="item"><span class="dot"></span>准备清单</div>
+        <div class="item"><span class="dot"></span>溯源</div>
+        <div class="item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="side-bottom"><div class="mode"><span class="led"></span><div><b>本地体验</b><br><span style="color:#9FB8CA">不连接平台</span></div></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div class="crumbs">工作台 / 演练<b>业主群 · 维修基金回扣</b></div>
+        <div class="top-actions"><span class="tag teal">演练中 3/5</span><button class="btn">暂停</button><button class="btn">查看复盘</button></div>
+      </div>
+      <div class="content">
+        <div class="run-grid">
+          <div class="card stepper">
+            <div class="step done"><span class="n">✓</span><div><div class="t">受理</div><div class="d">拆成可核查命题</div></div></div>
+            <div class="step done"><span class="n">✓</span><div><div class="t">指控</div><div class="d">对方开始带节奏</div></div></div>
+            <div class="step active"><span class="n">3</span><div><div class="t">信息地图</div><div class="d">三桶信息对齐</div></div></div>
+            <div class="step"><span class="n">4</span><div><div class="t">辩论</div><div class="d">正反双方交锋</div></div></div>
+            <div class="step"><span class="n">5</span><div><div class="t">揭示</div><div class="d">证据层 / 修辞层</div></div></div>
+            <div class="tiny muted" style="margin-top:auto;padding-top:12px;border-top:1px dashed #E6EDF3">当前进度 3/5<br>约 2 分钟</div>
+          </div>
+          <div class="map">
+            <div class="map-head"><div><div class="h2">信息地图</div><div class="tiny muted" style="margin-top:3px">把“他说的”“你有的”分开，才能看清争点</div></div><span class="tag blue">公开战场 / 对方的牌 / 你的底牌</span></div>
+            <div class="lanes">
+              <div class="lane shared"><h3>公开战场</h3><div class="sub">群里所有人都看得到</div><div class="bubble">“你私吞了维修基金的回扣。”</div><div class="bubble">“他说手里有转账记录和聊天截图。”</div><div class="bubble">“群里已经有人开始骂了。”</div></div>
+              <div class="lane theirs"><h3>对方的牌</h3><div class="sub">他声称有，但还没出示</div><div class="bubble">转账记录 <span class="tag gray" style="padding:1px 6px">未出示</span></div><div class="bubble">聊天截图 <span class="tag gray" style="padding:1px 6px">未出示</span></div></div>
+              <div class="lane mine"><h3>你的底牌</h3><div class="sub">对方看不到，但你需要先固定</div><div class="bubble">杭州出差 · 登机牌 / 酒店记录</div><div class="bubble">当晚时间线 · 待整理</div></div>
+            </div>
+            <div class="chat-panel">
+              <div class="who">指控方 · 群内公开</div>
+              <div class="msg">“你要真没拿，就把这半年的银行卡流水贴出来，让全群的人一起看看。”</div>
+              <div class="msg" style="margin-top:8px;color:#F4C97B">提示：这不是“证据”，这是把举证责任推给你。</div>
+            </div>
+            <div style="margin-top:16px;border-top:1px dashed #E6EDF3;padding-top:12px;display:flex;gap:10px;align-items:center">
+              <span class="tag orange">当前争点</span>
+              <span class="small muted">他是否有证据 · 你是否需要自证 · 下一步先做什么</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+              <div style="background:#F8FAFC;border:1px solid #E6EDF3;border-radius:10px;padding:12px"><div class="small"><b>01 先保存</b><br><span class="muted">群聊原文 + 时间 + 可见范围</span></div></div>
+              <div style="background:#F8FAFC;border:1px solid #E6EDF3;border-radius:10px;padding:12px"><div class="small"><b>02 先整理</b><br><span class="muted">出差凭证 + 当晚时间线</span></div></div>
+            </div>
+            <div class="tiny muted" style="margin-top:auto;padding-top:12px">为什么分三桶：公开可见、对方声称、你掌握的分开，才知道哪些要核验、哪些要固定。</div>
+          </div>
+          <div class="card tip">
+            <h3>现场提示</h3>
+            <p><b style="color:#7A4A12">不要自证。</b><br>先固定他公开指控的原文、时间和群成员可见范围。</p>
+            <p><b style="color:#1F7A6F">先分清。</b><br>“他声称有”不等于“他拿得出”；“你有”不等于“你要现在给他看”。</p>
+            <p><b style="color:#1F7A6F">再决定。</b><br>演练结束后，再决定回不回、怎么回。</p>
+            <p><b style="color:#1F7A6F">先记录。</b><br>群名、时间、发言人、可见范围；这些以后都是时间线的一部分。</p>
+            <p><b style="color:#1F7A6F">再判断。</b><br>哪一句是事实，哪一句是评价；事实可以核验，评价不用自证。</p>
+            <div class="tiny muted" style="margin-top:auto;padding-top:12px;border-top:1px dashed #E6EDF3">本地演练 · 不产生平台访问</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. report -->
+<section class="screen" id="s4">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="mark"></span><b>法前哨</b></div>
+      <div class="nav">
+        <div class="item"><span class="dot"></span>工作台</div>
+        <div class="item"><span class="dot"></span>案件</div>
+        <div class="item active"><span class="dot"></span>准备清单</div>
+        <div class="item"><span class="dot"></span>溯源</div>
+        <div class="item"><span class="dot"></span>设置</div>
+      </div>
+      <div class="side-bottom"><div class="mode"><span class="led"></span><div><b>本地体验</b><br><span style="color:#9FB8CA">不连接平台</span></div></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div class="crumbs">准备清单<b>业主群 · 维修基金回扣</b></div>
+        <div class="top-actions"><span class="tag teal">已完成</span><button class="btn">复制摘要</button><button class="btn primary">导出 PDF</button></div>
+      </div>
+      <div class="content">
+        <div class="summary">
+          <div class="card sum"><div class="k">目前能否认定真假</div><div class="v">无法判定</div><div class="n">双方关键证据均未出示</div></div>
+          <div class="card sum"><div class="k">举证责任</div><div class="v">谁主张谁举证</div><div class="n">要求你“自证清白”属于举证倒置</div></div>
+          <div class="card sum"><div class="k">下一步</div><div class="v">先固定证据</div><div class="n">再决定是否回应 / 走哪条路径</div></div>
+        </div>
+        <div class="tabs">
+          <div class="tab active">事实</div><div class="tab">证据</div><div class="tab">法律方向</div><div class="tab">话术</div><div class="tab">溯源</div>
+        </div>
+        <div class="report-grid">
+          <div class="card block">
+            <h3>可核查命题</h3>
+            <div class="kv"><div class="k">命题</div><div class="v">“当事人私吞了小区维修基金的回扣”</div></div>
+            <div class="kv"><div class="k">性质</div><div class="v">可核查的事实性指控，涉及名誉权纠纷</div></div>
+            <div class="kv"><div class="k">对方材料</div><div class="v">声称有转账记录 / 聊天截图；<b>未出示</b></div></div>
+            <div class="kv"><div class="k">你的材料</div><div class="v">出差登机牌 / 酒店记录；<b>未出示</b></div></div>
+            <div class="kv"><div class="k">结论</div><div class="v">目前无法判定，真伪不明；不替任何一方下结论</div></div>
+            <div class="h3" style="margin:16px 0 8px">下一步（准备清单）</div>
+            <div class="kv"><div class="k">01</div><div class="v">保存群聊原文、时间、群成员可见范围</div></div>
+            <div class="kv"><div class="k">02</div><div class="v">固定出差凭证（登机牌、酒店记录）</div></div>
+            <div class="kv"><div class="k">03</div><div class="v">先演练一次回应，不急着在群里自证</div></div>
+          </div>
+          <div>
+            <div class="card block" style="margin-bottom:14px">
+              <h3>平台调用记录</h3>
+              <div class="kv"><div class="k">模式</div><div class="v"><span class="tag teal">外部 AIC</span></div></div>
+              <div class="kv"><div class="k">任务</div><div class="v">task_96fd0329ecbb</div></div>
+              <div class="kv"><div class="k">状态</div><div class="v">completed · 14:12</div></div>
+              <div class="kv"><div class="k">来源</div><div class="v">…EZTK03.BS0XTB…（不同账号前缀）</div></div>
+              <div class="export"><button class="btn">查看返回原文</button><button class="btn">溯源</button></div>
+            </div>
+            <div class="card block">
+              <h3>溯源</h3>
+              <div class="timeline">
+                <div class="tl"><b>22:07 群聊出现指控</b>公开战场 · 已保存</div>
+                <div class="tl"><b>22:19 三桶信息整理</b>6 条材料 · 2 条待补</div>
+                <div class="tl"><b>22:31 演练完成</b>证据层 / 修辞层已揭示</div>
+                <div class="tl"><b>14:12 外部调用</b>task_96fd0329ecbb · completed</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:14px;padding:14px 18px;display:flex;align-items:center;justify-content:space-between">
+          <div><b style="font-size:12px;color:var(--navy)">导出会包含</b><span class="small muted" style="margin-left:10px">结论 / 证据清单 / 法律方向 / 溯源链接 / 免责声明</span></div>
+          <div class="export" style="margin:0"><button class="btn">选择导出范围</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 5. platform -->
+<section class="screen" id="s5">
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="mark"></span><b>法前哨</b></div>
+      <div class="nav">
+        <div class="item"><span class="dot"></span>工作台</div>
+        <div class="item"><span class="dot"></span>案件</div>
+        <div class="item"><span class="dot"></span>准备清单</div>
+        <div class="item"><span class="dot"></span>溯源</div>
+        <div class="item active"><span class="dot"></span>设置</div>
+      </div>
+      <div class="side-bottom"><div class="mode"><span class="led"></span><div><b>平台版</b><br><span style="color:#9FB8CA">已连接梧桐</span></div></div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div class="crumbs">设置<b>连接梧桐平台</b></div>
+        <div class="top-actions"><span class="tag blue">平台版</span><button class="btn">重新检测</button><button class="btn">断开连接</button></div>
+      </div>
+      <div class="content">
+        <div class="plat-grid">
+          <div class="card plat">
+            <div class="row"><div class="h2">连接状态</div><div class="status"><span class="led"></span>已连接</div></div>
+            <div class="field"><div class="k">Agent</div><div class="v">法前哨 v1.1.0</div></div>
+            <div class="field"><div class="k">AIC</div><div class="v">1.2.156.3088.1.BUPT.81M3FX.6CKYE5.0ZV54U.0IPO</div></div>
+            <div class="field"><div class="k">Endpoint</div><div class="v">https://150.109.154.16:8445/rpc</div></div>
+            <div class="field"><div class="k">证书</div><div class="v">已加载 · 有效期至 2027-10-21</div></div>
+            <div class="field"><div class="k">最近发现</div><div class="v">叮当按名称命中 · 2026-10-21 13:36</div></div>
+            <div class="warn" style="margin-top:14px"><b>平台版会产生真实访问记录</b><p>本地体验不产生平台访问；只有这里连接后，外部调用才会出现在任务库和平台统计里。</p></div>
+            <div style="margin-top:16px;border-top:1px dashed #E6EDF3;padding-top:14px">
+              <div class="h3" style="margin-bottom:10px">连接前检查</div>
+              <div class="check"><span class="ok">✓</span>AIC 与法前哨名称一致</div>
+              <div class="check"><span class="ok">✓</span>客户端证书未过期</div>
+              <div class="check"><span class="ok">✓</span>Endpoint 公网可达</div>
+              <div class="check"><span style="color:#C08A2E">○</span>平台侧任务库可回查</div>
+            </div>
+          </div>
+          <div>
+            <div class="card plat" style="margin-bottom:16px">
+              <div class="row"><div class="h2">最近外部调用</div><span class="tag teal">1 次成功</span></div>
+              <table class="table">
+                <tr><th>任务</th><th>来源</th><th>状态</th><th>时间</th></tr>
+                <tr><td>task_96fd0329ecbb</td><td>…EZTK03.BS0XTB…</td><td><span class="tag teal">completed</span></td><td>14:12</td></tr>
+                <tr><td>task_142a22323ae7</td><td>…EZTK03.BS0XTB…</td><td><span class="tag red">canceled</span></td><td>14:08</td></tr>
+              </table>
+              <div class="export"><button class="btn">查看任务库</button><button class="btn">打开溯源</button></div>
+            </div>
+            <div class="card plat danger">
+              <div class="h2" style="color:#9B3E32">安全边界</div>
+              <div class="small muted" style="line-height:1.8;margin-top:8px">证书与私钥只保存在本机安全存储；不写进安装包、不随案件导出。断开连接不会删除平台上的历史任务。</div>
+              <div class="export"><button class="btn">查看隐私说明</button><button class="btn">清理本地缓存</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="margin-top:16px;padding:16px 18px">
+          <div class="h3">连接流程</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px">
+            <div style="background:#F8FAFC;border:1px solid #E6EDF3;border-radius:9px;padding:10px"><span class="tag teal">1</span><div class="small" style="margin-top:7px"><b>启动本地服务</b><br><span class="muted">法前哨 · 平台模式</span></div></div>
+            <div style="background:#F8FAFC;border:1px solid #E6EDF3;border-radius:9px;padding:10px"><span class="tag teal">2</span><div class="small" style="margin-top:7px"><b>导入 AIC / 证书</b><br><span class="muted">只存本机安全存储</span></div></div>
+            <div style="background:#F8FAFC;border:1px solid #E6EDF3;border-radius:9px;padding:10px"><span class="tag teal">3</span><div class="small" style="margin-top:7px"><b>检测公网 endpoint</b><br><span class="muted">mTLS 握手成功</span></div></div>
+            <div style="background:#F8FAFC;border:1px solid #E6EDF3;border-radius:9px;padding:10px"><span class="tag teal">4</span><div class="small" style="margin-top:7px"><b>让外部 Agent 调用</b><br><span class="muted">任务入库，开始留痕</span></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>

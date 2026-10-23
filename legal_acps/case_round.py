@@ -108,7 +108,9 @@ __all__ = [
     "EXIT_ENV",
     "EXIT_OK",
     "EXIT_SKIPPED",
+    "LOCAL_ROLES_ENV",
     "OFFSET_MIN_S",
+    "REMOTE_EVIDENCE_ROLES",
     "ROUND_TIMEOUT_S",
     "ROUNDS_LEDGER_NAME",
     "SERVICE_NAME",
@@ -120,6 +122,7 @@ __all__ = [
     "check_ledger",
     "check_ports",
     "expected_ports",
+    "local_roles",
     "log_paths",
     "output_dir",
     "repo_root",
@@ -148,6 +151,23 @@ OFFSET_MIN_S = 180
 
 #: 专项记录文件名（放在 `.wit/<role>/` 下，与 `runs.jsonl` 同目录）。
 ROUNDS_LEDGER_NAME = "case_rounds.jsonl"
+
+#: 本机常驻角色清单的环境变量名。**跨机部署后必须按机器设置**：
+#:   · s1（主控/裁判/辩手/证据汇总/顾问/受理）：7 个角色；
+#:   · s2（证据三叶子）：3 个角色。
+#: 不设置时退回 `DEPLOY_ROLES`（单机口径）—— 这是为了不破坏离线用例与
+#: 迁移前的行为；但**跨机机器若忘了设，体检③会把对端端口误报成"掉线"**
+#: （2026-10-20 实测：s1 的每日轮因此连续 `exit_code=1`，而产物其实都成功了）。
+LOCAL_ROLES_ENV = "CASE_ROUND_LOCAL_ROLES"
+
+#: 跨机迁移到第二台机器的证据三叶子。它们**不在 s1 的本机期望端口里**；
+#: 远端是否可达由跨机探针（`run/e2e_leader_image.py` 等）负责，
+#: 不该由 s1 的 `ss -ltn` 来判 —— 本地 `ss` 天生看不到另一台机器的监听。
+REMOTE_EVIDENCE_ROLES: tuple[str, ...] = (
+    "evidence-image",
+    "evidence-audio",
+    "evidence-video",
+)
 
 #: systemd 单元名。**这三个地方必须一致**：本常量、`deploy/systemd/` 下的实际文件名、
 #: 以及 `scripts/systemd-install.sh` 里的那两个字面量（shell 没法 import 本模块）。
@@ -235,6 +255,38 @@ def expected_ports(roles: Iterable[str] = DEPLOY_ROLES) -> list[int]:
        不部署、端口本来就不监听 —— 把它们算进期望值会让这项体检**永远失败**。
     """
     return sorted(PORTS[r] for r in roles if r in PORTS)
+
+
+def local_roles() -> tuple[str, ...]:
+    """**本机**应常驻的角色。跨机部署后，它不等于 `DEPLOY_ROLES`。
+
+    取值顺序：
+      1. 环境变量 `CASE_ROUND_LOCAL_ROLES`（逗号或空白分隔）；
+      2. 未设置 ⇒ `DEPLOY_ROLES`（单机口径，保持迁移前行为不变）。
+
+    ⚠️ 为什么必须按机器区分（2026-10-20 实测）：
+       证据三叶子迁到 s2 后，s1 上仍启用了它们的 systemd 单元（但已停止），
+       而体检③的期望端口仍取全部 `DEPLOY_ROLES` ⇒ 每一轮都报
+       `[8449, 8451, 8452] 没有在监听 … 可能把常驻服务弄掉了线`，
+       整轮 `exit_code=1` —— **而 verdict 产物其实每一轮都正常落盘**。
+       这是典型的「判据本身在说谎」：它把"对端机器的端口"当成了"本机掉线"。
+
+    ⚠️ 只接受 `DEPLOY_ROLES` 里的角色：软废弃的角色即使点名也不该被期望监听
+       （点了名只会让体检③永远红）。未知/退役角色直接抛错，不静默忽略 ——
+       一个拼错的环境变量应当当场报出来，而不是悄悄退回"全部角色"。
+    """
+    raw = (os.environ.get(LOCAL_ROLES_ENV) or "").strip()
+    if not raw:
+        return tuple(DEPLOY_ROLES)
+    roles = tuple(part for part in re.split(r"[\s,]+", raw) if part)
+    bad = [r for r in roles if r not in DEPLOY_ROLES]
+    if bad:
+        raise RuntimeError(
+            f"{LOCAL_ROLES_ENV} 里有未部署/未知角色 {bad}；"
+            f"允许的取值：{', '.join(DEPLOY_ROLES)}"
+            "（软废弃角色不在其中；拼错会立刻报出来，不静默退回全部角色）"
+        )
+    return roles
 
 
 # ---------------------------------------------------------------------------
@@ -541,14 +593,20 @@ def _listen_ports(entries: Sequence[str]) -> set[int]:
 
 
 def check_ports(
-    *, roles: Iterable[str] = DEPLOY_ROLES, ss_exe: str | None = None
+    *, roles: Iterable[str] | None = None, ss_exe: str | None = None
 ) -> Check:
-    """体检 3：常驻端口**仍在监听**。
+    """体检 3：**本机**常驻端口仍在监听。
+
+    ⚠️ `roles=None` ⇒ 取 `local_roles()`（按机器区分的本机角色），
+       不是全部 `DEPLOY_ROLES`：跨机部署后，s2 的三个证据端口在 s1 上
+       **本来就不该监听**。远端可达性由跨机探针负责，不归 `ss -ltn` 管。
+       显式传 `roles` 的离线用例行为不变（传什么就期望什么）。
 
     ⚠️ 找不到 `ss` ⇒ **判失败**（不是"跳过"）：量不出来就该如实说量不出来，
        把它算成通过等于把体检关掉。服务器上的 `iproute2` 是基础包，实际不会缺。
     """
-    want = expected_ports(roles)
+    chosen = tuple(roles) if roles is not None else local_roles()
+    want = expected_ports(chosen)
     exe = ss_exe or shutil.which("ss")
     if exe is None:
         return Check("ports", False, f"找不到 `ss`，无法判定端口状态（期望 {want}）")
@@ -569,10 +627,12 @@ def check_ports(
         return Check(
             "ports",
             False,
-            f"这些常驻端口**没有**在监听：{missing}（期望 {want}，实际 {sorted(have)}）"
+            f"这些常驻端口**没有**在监听：{missing}（本机期望 {want}，实际 {sorted(have)}）"
             " —— 本轮可能把常驻服务弄掉了线（会话被顶 / 端口被抢）",
         )
-    return Check("ports", True, f"{len(want)} 个常驻端口都在监听：{want}")
+    return Check(
+        "ports", True, f"{len(want)} 个本机常驻端口都在监听：{want}"
+    )
 
 
 def snapshot_logs(paths: dict[str, Path]) -> dict[str, int]:
@@ -904,9 +964,13 @@ def run_case_round(
         )
     label = case_label(case.id)
 
+    # 本机角色清单**先算一次**，三个体检项共用（端口 / 偏移闸门 / 日志增量）。
+    # 跨机部署后它不是 `DEPLOY_ROLES`，见 `local_roles()` 的实测说明。
+    local = local_roles()
+
     # ⚠️ 两个闸门**总是都测**，哪怕 `--force` 也不跳过测量：被绕过的闸门必须留下
     #    「它本来会拦下」这个读数 —— 否则事后只看到"跑了"，看不出当初为什么该拦。
-    gates = [busy_gate(before_runs), offset_gate()]
+    gates = [busy_gate(before_runs), offset_gate(roles=local)]
     if force:
         gates = [
             Gate(g.name, True, g.detail if g.ok else f"[--force 已绕过] {g.detail}")
@@ -935,7 +999,7 @@ def run_case_round(
 
     # 基线：产物快照 + 日志字节数。**在起子进程之前取**。
     art_before = snapshot_artifacts()
-    logs = log_paths()
+    logs = log_paths(local)
     logs_before = snapshot_logs(logs)
 
     code, output, timed_out, duration = _spawn_round(
@@ -946,7 +1010,7 @@ def run_case_round(
     checks = (
         check_ledger(before_runs, after_runs, case),
         check_artifacts(art_before, snapshot_artifacts()),
-        check_ports(),
+        check_ports(roles=local),
         check_credentials(logs_before, paths=logs),
     )
 

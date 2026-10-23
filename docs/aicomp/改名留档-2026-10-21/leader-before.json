@@ -1,0 +1,98 @@
+{
+  "name": "法律咨询主控",
+  "version": "1.0.0",
+  "description": "受理待研判文本，协调专家 Partner，并汇总输出社会危害性判定结论。",
+  "logo_url": null,
+  "acs": {
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.X1J5R5.HKBBAM.018M",
+    "name": "法律咨询主控",
+    "active": true,
+    "skills": [
+      {
+        "id": "legal.issue_verdict",
+        "name": "submit_final_verdict",
+        "tags": [
+          "法律",
+          "结论输出"
+        ],
+        "version": "1.0.0",
+        "inputModes": [
+          "application/json"
+        ],
+        "description": "出具法律咨询研判结论，系统会把结论写入 output/ 目录下的 JSON 文件。",
+        "outputModes": [
+          "application/json"
+        ]
+      }
+    ],
+    "version": "1.0.0",
+    "provider": {
+      "name": "法律咨询多智能体课题组",
+      "countryCode": "CN",
+      "organization": "BUPT-LegalAgent-Demo"
+    },
+    "endPoints": [
+      {
+        "url": "https://150.109.154.16:8445/rpc",
+        "security": [
+          {
+            "mtls": []
+          }
+        ],
+        "transport": "JSONRPC"
+      }
+    ],
+    "certificate": {
+      "altNames": {
+        "ip": [
+          "150.109.154.16"
+        ]
+      },
+      "requestedValidity": 365
+    },
+    "description": "受理待研判文本，协调专家 Partner，并汇总输出社会危害性判定结论。",
+    "capabilities": {
+      "streaming": false,
+      "messageQueue": [],
+      "notification": false
+    },
+    "protocolVersion": "02.02",
+    "securitySchemes": {
+      "mtls": {
+        "type": "mutualTLS",
+        "description": "ACPs mutual TLS identity"
+      }
+    },
+    "lastModifiedTime": "2026-09-27T17:17:44.159235+08:00",
+    "defaultInputModes": [
+      "application/json"
+    ],
+    "defaultOutputModes": [
+      "application/json"
+    ]
+  },
+  "is_ontology": false,
+  "id": "01a0e223-392e-7400-bcdc-99fa17adc411",
+  "aic": "1.2.156.3088.1.BUPT.81M3FX.X1J5R5.HKBBAM.018M",
+  "acs_hash": "dcbaa5e611eaf247681c62e6c001756161dc4c39f56e6656f08b9fca877ed45e",
+  "acs_version": 2,
+  "acs_last_seq": 524,
+  "is_active": true,
+  "is_deleted": false,
+  "deleted_at": null,
+  "deleted_reason": null,
+  "is_disabled": false,
+  "disabled_at": null,
+  "disabled_reason": null,
+  "approval_status": "APPROVED",
+  "created_by_ids": null,
+  "created_at": "2026-09-27T17:12:34.350606+08:00",
+  "updated_at": "2026-09-27T17:17:44.159863+08:00",
+  "submitted_at": "2026-09-27T17:12:34.975770+08:00",
+  "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+  "processed_at": "2026-09-27T17:17:44.156888+08:00",
+  "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+  "vector_id": null,
+  "created_by": null,
+  "processed_by": null
+}

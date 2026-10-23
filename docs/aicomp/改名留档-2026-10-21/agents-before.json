@@ -1,0 +1,2641 @@
+[
+  {
+    "name": "视频鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对视频做本地鉴伪初检：容器声明一致性、盒树与分段布局、三处时长自洽性、样本表自洽性与 chunk 偏移越界、编辑列表、时间戳与自报编码工具，以及**零解码取到的抽样帧**（接图像鉴伪链）。给出综合线索等级与更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.SSWF3Q.80X0US.1D03",
+      "name": "视频鉴伪 Partner",
+      "active": true,
+      "skills": [
+        {
+          "id": "evidence.analyze_video",
+          "name": "analyze_video",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "视频鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一段视频做鉴伪**初检**：给出逐项技术线索（容器声明一致性 / 盒树与分段布局 / 三处时长自洽性 / 样本表自洽性与 chunk 偏移越界 / 编辑列表 elst / 时间戳与自报编码工具 / 抽样帧接图像鉴伪链）、综合线索等级，以及「更准但更贵」的复检路径（免费开源工具 → 付费取证软件 → 声像资料司法鉴定）。**接受两种输入**：`inbox:<sha256>` 句柄（任务自带的视频，**首选**）、`data:video/...;base64,...`；**不接受任何网络地址或本地路径**。⚠️ 本进程没有视频解码器：H.264 / H.265 的帧一律解不出，报告会明确写出「帧层整项没有执行」；能零解码取到帧的只有 MJPEG / 内嵌封面帧 / 动画 GIF。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://101.33.124.181:8452/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "101.33.124.181"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对视频做本地鉴伪初检：容器声明一致性、盒树与分段布局、三处时长自洽性、样本表自洽性与 chunk 偏移越界、编辑列表、时间戳与自报编码工具，以及**零解码取到的抽样帧**（接图像鉴伪链）。给出综合线索等级与更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-15T13:05:32.072379+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a13df1-449e-74ab-9117-7c35f0a4cdfa",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.SSWF3Q.80X0US.1D03",
+    "acs_hash": "1c0c0d85de8eb2f568f0fba80448efd5044dacea0b7faca4463a2e25df011f4d",
+    "acs_version": 2,
+    "acs_last_seq": 1449,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-15T13:03:04.350360+08:00",
+    "updated_at": "2026-10-15T13:05:32.073103+08:00",
+    "submitted_at": "2026-10-15T13:03:05.520283+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-15T13:05:32.069306+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "音频鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对音频做本地鉴伪初检：容器与编码参数层线索、波形域九项（含电网频率 ENF 相位连续性）、综合线索等级，以及更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.1NRXAP.H91LES.0O1S",
+      "name": "音频鉴伪 Partner",
+      "active": true,
+      "skills": [
+        {
+          "id": "evidence.analyze_audio",
+          "name": "analyze_audio",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "音频鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一段音频做鉴伪**初检**：给出逐项技术线索（容器自洽性 / 编码参数 / 署名元数据 / 频谱硬截止 / 底噪一致性 / 数字静音段 / 谱形状突变 / 样本级不连续 / 电网频率 ENF 相位连续性）、综合线索等级，以及「更准但更贵」的复检路径（免费开源工具 → 付费降噪取证 → 声像资料司法鉴定）。**接受两种输入**：`inbox:<sha256>` 句柄（任务自带的音频，**首选**）、`data:audio/...;base64,...`；**不接受任何网络地址或本地路径**。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://101.33.124.181:8451/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "101.33.124.181"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对音频做本地鉴伪初检：容器与编码参数层线索、波形域九项（含电网频率 ENF 相位连续性）、综合线索等级，以及更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-15T13:05:38.931077+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a13df1-1e77-72d3-af24-869fcfc0f1c3",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.1NRXAP.H91LES.0O1S",
+    "acs_hash": "720ace28f65e97404c042fe590aa83740d16c6838b623603c5486735bb2b86d0",
+    "acs_version": 2,
+    "acs_last_seq": 1450,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-15T13:02:54.583481+08:00",
+    "updated_at": "2026-10-15T13:05:38.932165+08:00",
+    "submitted_at": "2026-10-15T13:02:55.429071+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-15T13:05:38.926779+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "图像鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对图片做本地鉴伪初检：逐项技术线索、综合线索等级，以及更准但更贵的复检路径（免费线上 / 付费 API / 线下司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.RXXNIM.YZBRAJ.0U75",
+      "name": "图像鉴伪 Partner",
+      "active": true,
+      "skills": [
+        {
+          "id": "evidence.inspect_image",
+          "name": "inspect_image",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "图像鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一张图片做鉴伪**初检**：给出逐项技术线索（容器 / 元数据 / 量化表 / 重压缩差异 / 噪声层一致性 / 块网格相位 / 重采样 / 平坦区噪声 / 复制-移动）、综合线索等级，以及「更准但更贵」的复检路径（免费线上 → 付费 API → 线下司法鉴定）。**接受三种输入**：`inbox:<sha256>` 句柄（任务自带的图片，**首选**）、`data:image/...;base64,...`、白名单内的 https 地址；不接受本地路径、相对路径或网页链接。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://101.33.124.181:8449/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "101.33.124.181"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对图片做本地鉴伪初检：逐项技术线索、综合线索等级，以及更准但更贵的复检路径（免费线上 / 付费 API / 线下司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-15T13:05:45.087466+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a13df1-02e1-7112-921f-628e6410171e",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.RXXNIM.YZBRAJ.0U75",
+    "acs_hash": "80497331500e6a383444b418bba42451d37d35c302df433bab687f4e4658e485",
+    "acs_version": 2,
+    "acs_last_seq": 1451,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-15T13:02:47.521100+08:00",
+    "updated_at": "2026-10-15T13:05:45.088343+08:00",
+    "submitted_at": "2026-10-15T13:02:48.123751+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-15T13:05:45.084548+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "视频鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对视频做本地鉴伪初检：容器声明一致性、盒树与分段布局、三处时长自洽性、样本表自洽性与 chunk 偏移越界、编辑列表、时间戳与自报编码工具，以及**零解码取到的抽样帧**（接图像鉴伪链）。给出综合线索等级与更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.JLDJG1.X2JVN8.0DXK",
+      "name": "视频鉴伪 Partner",
+      "active": false,
+      "skills": [
+        {
+          "id": "evidence.analyze_video",
+          "name": "analyze_video",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "视频鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一段视频做鉴伪**初检**：给出逐项技术线索（容器声明一致性 / 盒树与分段布局 / 三处时长自洽性 / 样本表自洽性与 chunk 偏移越界 / 编辑列表 elst / 时间戳与自报编码工具 / 抽样帧接图像鉴伪链）、综合线索等级，以及「更准但更贵」的复检路径（免费开源工具 → 付费取证软件 → 声像资料司法鉴定）。**接受两种输入**：`inbox:<sha256>` 句柄（任务自带的视频，**首选**）、`data:video/...;base64,...`；**不接受任何网络地址或本地路径**。⚠️ 本进程没有视频解码器：H.264 / H.265 的帧一律解不出，报告会明确写出「帧层整项没有执行」；能零解码取到帧的只有 MJPEG / 内嵌封面帧 / 动画 GIF。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8452/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对视频做本地鉴伪初检：容器声明一致性、盒树与分段布局、三处时长自洽性、样本表自洽性与 chunk 偏移越界、编辑列表、时间戳与自报编码工具，以及**零解码取到的抽样帧**（接图像鉴伪链）。给出综合线索等级与更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-15T13:01:43.168959+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a13b27-26a0-7157-ae1b-b85c43147008",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.JLDJG1.X2JVN8.0DXK",
+    "acs_hash": "a518a6e7dfa3a38fc2c91562de180db0cca53e72c209a7c59931ba0700e1b31e",
+    "acs_version": 3,
+    "acs_last_seq": 1448,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-15T13:01:43.168908+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-15T00:03:03.968221+08:00",
+    "updated_at": "2026-10-15T13:01:43.169638+08:00",
+    "submitted_at": "2026-10-15T00:03:05.362535+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-15T00:10:33.174994+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "音频鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对音频做本地鉴伪初检：容器与编码参数层线索、波形域九项（含电网频率 ENF 相位连续性）、综合线索等级，以及更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.6QQP6S.VW2NSL.0SEJ",
+      "name": "音频鉴伪 Partner",
+      "active": false,
+      "skills": [
+        {
+          "id": "evidence.analyze_audio",
+          "name": "analyze_audio",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "音频鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一段音频做鉴伪**初检**：给出逐项技术线索（容器自洽性 / 编码参数 / 署名元数据 / 频谱硬截止 / 底噪一致性 / 数字静音段 / 谱形状突变 / 样本级不连续 / 电网频率 ENF 相位连续性）、综合线索等级，以及「更准但更贵」的复检路径（免费开源工具 → 付费降噪取证 → 声像资料司法鉴定）。**接受两种输入**：`inbox:<sha256>` 句柄（任务自带的音频，**首选**）、`data:audio/...;base64,...`；**不接受任何网络地址或本地路径**。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8451/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对音频做本地鉴伪初检：容器与编码参数层线索、波形域九项（含电网频率 ENF 相位连续性）、综合线索等级，以及更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-15T13:01:39.914600+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a13b27-0515-719f-a859-2e66d0f442ff",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.6QQP6S.VW2NSL.0SEJ",
+    "acs_hash": "171b8ed5b3eb75b040e5b324d92f11c4ecf146eefa805dce7c18ce11bf2b69f9",
+    "acs_version": 3,
+    "acs_last_seq": 1447,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-15T13:01:39.914549+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-15T00:02:55.381440+08:00",
+    "updated_at": "2026-10-15T13:01:39.915337+08:00",
+    "submitted_at": "2026-10-15T00:02:56.758309+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-15T00:10:39.564250+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "图像鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对图片做本地鉴伪初检：逐项技术线索、综合线索等级，以及更准但更贵的复检路径（免费线上 / 付费 API / 线下司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.EVW5AI.SUBQ8V.0BY3",
+      "name": "图像鉴伪 Partner",
+      "active": false,
+      "skills": [
+        {
+          "id": "evidence.inspect_image",
+          "name": "inspect_image",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "图像鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一张图片做鉴伪**初检**：给出逐项技术线索（容器 / 元数据 / 量化表 / 重压缩差异 / 噪声层一致性 / 块网格相位 / 重采样 / 平坦区噪声 / 复制-移动）、综合线索等级，以及「更准但更贵」的复检路径（免费线上 → 付费 API → 线下司法鉴定）。**接受三种输入**：`inbox:<sha256>` 句柄（任务自带的图片，**首选**）、`data:image/...;base64,...`、白名单内的 https 地址；不接受本地路径、相对路径或网页链接。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8449/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对图片做本地鉴伪初检：逐项技术线索、综合线索等级，以及更准但更贵的复检路径（免费线上 / 付费 API / 线下司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-15T13:01:35.561973+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a13b26-df6d-7726-b500-aa0ecf9f99ca",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.EVW5AI.SUBQ8V.0BY3",
+    "acs_hash": "4380e732b6b346c6cc10d735a1c096b8b17bfc66514b326ff6dbe573375890d3",
+    "acs_version": 3,
+    "acs_last_seq": 1446,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-15T13:01:35.561924+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-15T00:02:45.741051+08:00",
+    "updated_at": "2026-10-15T13:01:35.562649+08:00",
+    "submitted_at": "2026-10-15T00:02:47.438665+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-15T00:10:46.003511+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "线索受理官",
+    "version": "1.0.0",
+    "description": "受理群众报送的可疑传闻线索：规范化为待核查记录落进队列（含来源/热度/敏感位），不做真伪判断。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.PNARNQ.TNWBU5.13GB",
+      "name": "线索受理官",
+      "active": true,
+      "skills": [
+        {
+          "id": "lead.submit_lead",
+          "name": "submit_lead",
+          "tags": [
+            "法律",
+            "事实核查",
+            "线索受理"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交一条已规范化的待核查线索并落盘到待核查队列。claim 必须是求证口吻的传闻原文转述——不得包含官方定性词（谣言/不实/辟谣等）或处罚结果（拘留/罚款/判刑等）；category 从返回的 categories 清单里挑。被拒会带 refusal_reason 与 how_to_fix，修正后重新提交。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8454/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理群众报送的可疑传闻线索：规范化为待核查记录落进队列（含来源/热度/敏感位），不做真伪判断。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-11T19:56:44.225419+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a12ac8-3e84-7617-ae80-aae27c589cca",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.PNARNQ.TNWBU5.13GB",
+    "acs_hash": "829931f93fc9f34f20eb4fcfffd39e64c7313a8b75ac5886f10bee4161f9d95c",
+    "acs_version": 2,
+    "acs_last_seq": 1281,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-11T19:45:28.707903+08:00",
+    "updated_at": "2026-10-11T19:56:44.226219+08:00",
+    "submitted_at": "2026-10-11T19:45:41.933127+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-11T19:56:44.222574+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "法律咨询顾问",
+    "version": "1.0.0",
+    "description": "受理法律纠纷初期咨询：检索已核验法条库，给出带条文引用的方向性建议，并如实声明能力边界（库外领域直接说能力不足）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC",
+      "name": "法律咨询顾问",
+      "active": true,
+      "skills": [
+        {
+          "id": "law.lookup_articles",
+          "name": "lookup_articles",
+          "tags": [
+            "法律",
+            "咨询",
+            "法条检索"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "text/plain"
+          ],
+          "description": "按咨询内容检索本地已核验法条库（八部法律：民法典/刑法/公司法/税收征管/增值税/企业所得税/个税/专利法），返回条文原文与官方来源。写建议书之前必须先查——没查到的条文不许引用。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "law.submit_advice",
+          "name": "submit_advice",
+          "tags": [
+            "法律",
+            "咨询",
+            "建议书"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交法律纠纷初期的咨询建议书：对纠纷的理解复述、能力边界声明、方向性建议与引用的法条（只能引用 lookup 查到的条文，逐字摘录）。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8453/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理法律纠纷初期咨询：检索已核验法条库，给出带条文引用的方向性建议，并如实声明能力边界（库外领域直接说能力不足）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-07T21:51:39.015315+08:00",
+      "defaultInputModes": [
+        "text/plain",
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a11695-f477-73d5-9d55-bc37fadd2d69",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.86JB9N.06HD08.0LJC",
+    "acs_hash": "f5670ade3b0bd4e0bc5508e57a95540dda7611ccb96ed95a1216e4a807bcf63d",
+    "acs_version": 2,
+    "acs_last_seq": 1006,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-07T21:38:08.630914+08:00",
+    "updated_at": "2026-10-07T21:51:39.016155+08:00",
+    "submitted_at": "2026-10-07T21:38:09.574794+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-07T21:51:39.012220+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "网络裁判",
+    "version": "2.0.0",
+    "description": "受理事实争议事件，独立立题采证，组织正反双方辩论，并出具含话术命中的裁定书。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.D3YAH9.WV6PFV.0BKO",
+      "name": "网络裁判",
+      "active": true,
+      "skills": [
+        {
+          "id": "fact.arbitrate_claim",
+          "name": "arbitrate_claim",
+          "tags": [
+            "法律",
+            "事实核查",
+            "网络裁判"
+          ],
+          "version": "2.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交受理结论：把待核查事件整理成一个**可判真假的命题**、一份可核验事实清单，以及分配给正反双方的立场。这一步只整理事实与命题，不写真假结论。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "fact.issue_ruling",
+          "name": "issue_ruling",
+          "tags": [
+            "法律",
+            "事实核查",
+            "网络裁判",
+            "裁定"
+          ],
+          "version": "2.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交最终裁定书并落盘到 output/。verdict 取「确有其事 / 不实 / 断章取义 / 无法判定」；fallacies 里逐条列出辩论中命中的误导性话术。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "2.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8448/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理事实争议事件，独立立题采证，组织正反双方辩论，并出具含话术命中的裁定书。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-07T13:44:44.307604+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a114d6-0024-7444-a213-59e2f8e30562",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.D3YAH9.WV6PFV.0BKO",
+    "acs_hash": "d3408e2097985dcbc486118725a37ba771cecf5c7c591b66513e5b5af6606149",
+    "acs_version": 2,
+    "acs_last_seq": 999,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-07T13:28:51.492238+08:00",
+    "updated_at": "2026-10-07T13:44:44.308237+08:00",
+    "submitted_at": "2026-10-07T13:28:52.357556+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-07T13:44:44.304841+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "视频鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对视频做本地鉴伪初检：容器声明一致性、盒树与分段布局、三处时长自洽性、样本表自洽性与 chunk 偏移越界、编辑列表、时间戳与自报编码工具，以及**零解码取到的抽样帧**（接图像鉴伪链）。给出综合线索等级与更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.7V3D5C.K4IG1U.09VS",
+      "name": "视频鉴伪 Partner",
+      "active": false,
+      "skills": [
+        {
+          "id": "evidence.analyze_video",
+          "name": "analyze_video",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "视频鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一段视频做鉴伪**初检**：给出逐项技术线索（容器声明一致性 / 盒树与分段布局 / 三处时长自洽性 / 样本表自洽性与 chunk 偏移越界 / 编辑列表 elst / 时间戳与自报编码工具 / 抽样帧接图像鉴伪链）、综合线索等级，以及「更准但更贵」的复检路径（免费开源工具 → 付费取证软件 → 声像资料司法鉴定）。**接受两种输入**：`inbox:<sha256>` 句柄（任务自带的视频，**首选**）、`data:video/...;base64,...`；**不接受任何网络地址或本地路径**。⚠️ 本进程没有视频解码器：H.264 / H.265 的帧一律解不出，报告会明确写出「帧层整项没有执行」；能零解码取到帧的只有 MJPEG / 内嵌封面帧 / 动画 GIF。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8452/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对视频做本地鉴伪初检：容器声明一致性、盒树与分段布局、三处时长自洽性、样本表自洽性与 chunk 偏移越界、编辑列表、时间戳与自报编码工具，以及**零解码取到的抽样帧**（接图像鉴伪链）。给出综合线索等级与更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-14T23:58:11.368680+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a10094-b939-7380-adb1-0aedfb1d554d",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.7V3D5C.K4IG1U.09VS",
+    "acs_hash": "d2be188d34392ad80befad9f186e28971b947b1f85e17d0507bb09b62ef37e30",
+    "acs_version": 3,
+    "acs_last_seq": 1436,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-14T23:58:11.368635+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-03T15:05:09.177828+08:00",
+    "updated_at": "2026-10-14T23:58:11.369260+08:00",
+    "submitted_at": "2026-10-03T15:05:09.825223+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-03T15:07:39.350363+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "音频鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对音频做本地鉴伪初检：容器与编码参数层线索、波形域九项（含电网频率 ENF 相位连续性）、综合线索等级，以及更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.3A82Y9.CDQRMV.0EJR",
+      "name": "音频鉴伪 Partner",
+      "active": false,
+      "skills": [
+        {
+          "id": "evidence.analyze_audio",
+          "name": "analyze_audio",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "音频鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一段音频做鉴伪**初检**：给出逐项技术线索（容器自洽性 / 编码参数 / 署名元数据 / 频谱硬截止 / 底噪一致性 / 数字静音段 / 谱形状突变 / 样本级不连续 / 电网频率 ENF 相位连续性）、综合线索等级，以及「更准但更贵」的复检路径（免费开源工具 → 付费降噪取证 → 声像资料司法鉴定）。**接受两种输入**：`inbox:<sha256>` 句柄（任务自带的音频，**首选**）、`data:audio/...;base64,...`；**不接受任何网络地址或本地路径**。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8451/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对音频做本地鉴伪初检：容器与编码参数层线索、波形域九项（含电网频率 ENF 相位连续性）、综合线索等级，以及更准但更贵的复检路径（免费开源工具 / 付费取证软件 / 声像资料司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-14T23:58:05.051115+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a10094-a674-76b4-96d4-a760b7fe706e",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.3A82Y9.CDQRMV.0EJR",
+    "acs_hash": "27c203dc6d1fd613794255541a03713d3f9c7d4125e244b78577705183f1d278",
+    "acs_version": 3,
+    "acs_last_seq": 1435,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-14T23:58:05.051065+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-03T15:05:04.372615+08:00",
+    "updated_at": "2026-10-14T23:58:05.051841+08:00",
+    "submitted_at": "2026-10-03T15:05:04.970575+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-03T15:07:42.425982+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "证据鉴证 Leader",
+    "version": "1.0.0",
+    "description": "受理证据鉴证委托，组织下游鉴伪专家完成技术初检，并汇总成一份带不确定度与复检阶梯的鉴证报告。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.OBF4W2.9324OK.02RZ",
+      "name": "证据鉴证 Leader",
+      "active": true,
+      "skills": [
+        {
+          "id": "evidence.open_case",
+          "name": "open_evidence_case",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "受理"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交证据鉴证的受理结论：材料是什么、属于哪种模态、要回答的可检验问题是什么，以及本次材料的引用（句柄或地址，原样照抄）。这一步只立题，不下任何真伪结论。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "evidence.issue_report",
+          "name": "issue_evidence_report",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "报告",
+            "结论输出"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "出具证据鉴证报告并落盘到 output/。suspicion 只允许「低 / 中 / 高 / 无法判定」；每条线索必须连同它自己的 caveat 一并回传；没跑成的检查项要单独列进 not_run。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8450/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理证据鉴证委托，组织下游鉴伪专家完成技术初检，并汇总成一份带不确定度与复检阶梯的鉴证报告。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-03T15:07:45.833584+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a10094-896a-76b0-9d1b-000760cf4057",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.OBF4W2.9324OK.02RZ",
+    "acs_hash": "d447b8814eef8fd35322db28264af79ed8986902c7d88543480888af121fdd50",
+    "acs_version": 2,
+    "acs_last_seq": 822,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-03T15:04:56.938302+08:00",
+    "updated_at": "2026-10-03T15:07:45.834153+08:00",
+    "submitted_at": "2026-10-03T15:04:57.538558+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-03T15:07:45.831474+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "图像鉴伪 Partner",
+    "version": "1.0.0",
+    "description": "对图片做本地鉴伪初检：逐项技术线索、综合线索等级，以及更准但更贵的复检路径（免费线上 / 付费 API / 线下司法鉴定）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.3JGPMW.9ZWOMP.05Q9",
+      "name": "图像鉴伪 Partner",
+      "active": false,
+      "skills": [
+        {
+          "id": "evidence.inspect_image",
+          "name": "inspect_image",
+          "tags": [
+            "法律",
+            "证据鉴证",
+            "图像鉴伪"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "对一张图片做鉴伪**初检**：给出逐项技术线索（容器 / 元数据 / 量化表 / 重压缩差异 / 噪声层一致性 / 块网格相位 / 重采样 / 平坦区噪声 / 复制-移动）、综合线索等级，以及「更准但更贵」的复检路径（免费线上 → 付费 API → 线下司法鉴定）。**接受三种输入**：`inbox:<sha256>` 句柄（任务自带的图片，**首选**）、`data:image/...;base64,...`、白名单内的 https 地址；不接受本地路径、相对路径或网页链接。输出是技术线索、**不是**真伪认定 —— 转述时必须带上每一条的 caveat。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8449/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对图片做本地鉴伪初检：逐项技术线索、综合线索等级，以及更准但更贵的复检路径（免费线上 / 付费 API / 线下司法鉴定）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-14T23:57:58.274143+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a1008e-e5c4-71e2-829e-085cfbd46b97",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.3JGPMW.9ZWOMP.05Q9",
+    "acs_hash": "4ddb3635f4f20feba693400ccc065e75179cb47be1d07acc77595c614632afe7",
+    "acs_version": 3,
+    "acs_last_seq": 1434,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-14T23:57:58.274085+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-10-03T14:58:47.364040+08:00",
+    "updated_at": "2026-10-14T23:57:58.274985+08:00",
+    "submitted_at": "2026-10-03T14:58:47.985632+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-10-03T15:07:50.683189+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "辩论正方",
+    "version": "2.0.0",
+    "description": "为被指派的立场构建尽可能强的论证，逐轮提交结构化信号。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.DW98RD.00EKPX.0R13",
+      "name": "辩论正方",
+      "active": true,
+      "skills": [
+        {
+          "id": "debate.submit_argument",
+          "name": "submit_pro_argument",
+          "tags": [
+            "法律",
+            "事实核查",
+            "辩论",
+            "正方"
+          ],
+          "version": "2.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交本轮的立场论证：round / stance(hold|concede) / confidence(0-1) / key_point / rebuts。每一轮都必须提交，否则裁判无法判断辩论进度。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "2.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8446/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "为被指派的立场构建尽可能强的论证，逐轮提交结构化信号。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-09-30T14:52:41.349760+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0f109-2733-746b-83ea-9d240c6a038c",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.DW98RD.00EKPX.0R13",
+    "acs_hash": "fb48891912a1e246c60ffc2d35a17291caaaea89e4e51df1b88181459b1f050d",
+    "acs_version": 2,
+    "acs_last_seq": 769,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-30T14:38:24.051102+08:00",
+    "updated_at": "2026-09-30T14:52:41.350516+08:00",
+    "submitted_at": "2026-09-30T14:38:24.672465+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-30T14:52:41.346868+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "网络裁判",
+    "version": "1.0.0",
+    "description": "受理事实争议事件，独立立题采证，组织正反双方辩论，并出具含话术命中的裁定书。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.83WI6B.TF6QRX.0E91",
+      "name": "网络裁判",
+      "active": false,
+      "skills": [
+        {
+          "id": "fact.arbitrate_claim",
+          "name": "arbitrate_claim",
+          "tags": [
+            "法律",
+            "事实核查",
+            "网络裁判"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交受理结论：把待核查事件整理成一个**可判真假的命题**、一份可核验事实清单，以及分配给正反双方的立场。这一步只整理事实与命题，不写真假结论。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "fact.issue_ruling",
+          "name": "issue_ruling",
+          "tags": [
+            "法律",
+            "事实核查",
+            "网络裁判",
+            "裁定"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交最终裁定书并落盘到 output/。verdict 取「确有其事 / 断章取义 / 无法判定」；fallacies 里逐条列出辩论中命中的误导性话术。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8448/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理事实争议事件，独立立题采证，组织正反双方辩论，并出具含话术命中的裁定书。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-10-07T13:28:38.179516+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0f107-e0f5-7331-8d04-7ba984f229e9",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.83WI6B.TF6QRX.0E91",
+    "acs_hash": "ac4225f526bff80559e647f592f71b801cd057166939457103b7a1853491cd42",
+    "acs_version": 3,
+    "acs_last_seq": 998,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-10-07T13:28:38.179465+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-30T14:37:00.532896+08:00",
+    "updated_at": "2026-10-07T13:28:38.180137+08:00",
+    "submitted_at": "2026-09-30T14:37:01.136734+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-30T14:52:44.994902+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "辩论反方",
+    "version": "1.0.0",
+    "description": "为随机指派的立场构建尽可能强的反驳论证，逐轮提交结构化信号。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.2UZTZC.HNNIJ0.0OCF",
+      "name": "辩论反方",
+      "active": true,
+      "skills": [
+        {
+          "id": "debate.submit_argument",
+          "name": "submit_debate_argument",
+          "tags": [
+            "法律",
+            "事实核查",
+            "辩论"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交本轮辩论的结构化信号：round / stance(hold|concede) / confidence(0-1) / key_point / rebuts。每一轮都必须提交，否则系统无法判断辩论何时结束。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8447/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "为随机指派的立场构建尽可能强的反驳论证，逐轮提交结构化信号。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-09-29T16:28:42.902627+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0ec3f-b377-773e-97c3-66e94b78d9f5",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.2UZTZC.HNNIJ0.0OCF",
+    "acs_hash": "79b7b08049bf2df40bd6a5b15f64cde728fedf2aa293a4a2139357cb5eeba2f8",
+    "acs_version": 2,
+    "acs_last_seq": 707,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-29T16:19:52.823239+08:00",
+    "updated_at": "2026-09-29T16:28:42.903437+08:00",
+    "submitted_at": "2026-09-29T16:19:53.550222+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-29T16:28:42.900119+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "辩论正方",
+    "version": "1.0.0",
+    "description": "被裁判委托后：产出可核验事实清单，另起会话与反方逐轮辩论，并把完整辩论记录交回裁判（不给出真假结论）。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.IKLCO4.KO122C.16BX",
+      "name": "辩论正方",
+      "active": false,
+      "skills": [
+        {
+          "id": "debate.gather_case",
+          "name": "report_fact_sheet",
+          "tags": [
+            "法律",
+            "事实核查",
+            "采证"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交第一段产出：可核验事实清单（FactSheet）。只写可被外部验证的客观信息：时间、地点、主体、原始表述、出处。严禁写入任何判断性内容（不得出现'这是真的''这明显是造谣'）。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "debate.open_debate",
+          "name": "report_debate_opening",
+          "tags": [
+            "法律",
+            "事实核查",
+            "辩论"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交最终交付物：可核验事实清单 + 完整辩论记录（DebateOpening）。这是辩论会话的收尾动作，交回裁判后由裁判独立裁定。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8446/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "被裁判委托后：产出可核验事实清单，另起会话与反方逐轮辩论，并把完整辩论记录交回裁判（不给出真假结论）。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-09-30T14:38:19.386462+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0ec3f-a430-74bb-9320-19fce8e0b652",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.IKLCO4.KO122C.16BX",
+    "acs_hash": "7576dc827e1725be0ca397ed3bed40bb57776c8e99f0208f2608ebd887ea7c3b",
+    "acs_version": 3,
+    "acs_last_seq": 768,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-09-30T14:38:19.386414+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-29T16:19:48.911872+08:00",
+    "updated_at": "2026-09-30T14:38:19.386896+08:00",
+    "submitted_at": "2026-09-29T16:19:49.506490+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-29T16:28:45.572227+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "法律咨询主控",
+    "version": "1.0.0",
+    "description": "受理待研判文本，协调专家 Partner，并汇总输出社会危害性判定结论。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.X1J5R5.HKBBAM.018M",
+      "name": "法律咨询主控",
+      "active": true,
+      "skills": [
+        {
+          "id": "legal.issue_verdict",
+          "name": "submit_final_verdict",
+          "tags": [
+            "法律",
+            "结论输出"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "出具法律咨询研判结论，系统会把结论写入 output/ 目录下的 JSON 文件。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8445/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理待研判文本，协调专家 Partner，并汇总输出社会危害性判定结论。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-09-27T17:17:44.159235+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0e223-392e-7400-bcdc-99fa17adc411",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.X1J5R5.HKBBAM.018M",
+    "acs_hash": "dcbaa5e611eaf247681c62e6c001756161dc4c39f56e6656f08b9fca877ed45e",
+    "acs_version": 2,
+    "acs_last_seq": 524,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-27T17:12:34.350606+08:00",
+    "updated_at": "2026-09-27T17:17:44.159863+08:00",
+    "submitted_at": "2026-09-27T17:12:34.975770+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-27T17:17:44.156888+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "社会危害性评估 Partner",
+    "version": "1.0.0",
+    "description": "综合评估言论的社会危害性，输出 -100..100 的综合指数与六维分解。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.7X9LX2.LAQFAF.0926",
+      "name": "社会危害性评估 Partner",
+      "active": true,
+      "skills": [
+        {
+          "id": "harm.assess_social_impact",
+          "name": "assess_social_impact",
+          "tags": [
+            "法律",
+            "危害评估",
+            "社会治理"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交社会危害性评估结论。harm_index 是 -100..100 的整数：正数表示该言论有问题、不应支持，负数表示正当、应予支持。band 字段可以留空，系统会按 harm_index 自动补全。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8444/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "综合评估言论的社会危害性，输出 -100..100 的综合指数与六维分解。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-09-27T17:17:49.333270+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0e223-22be-7301-976e-b4ce610581af",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.7X9LX2.LAQFAF.0926",
+    "acs_hash": "c4d1a370a4104571b3f9029ad9581ec3fa37165d3fe5d49a98e97ab3ba9b7261",
+    "acs_version": 2,
+    "acs_last_seq": 525,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-27T17:12:28.606301+08:00",
+    "updated_at": "2026-09-27T17:17:49.333847+08:00",
+    "submitted_at": "2026-09-27T17:12:29.246224+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-27T17:17:49.331029+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "煽动性识别 Partner",
+    "version": "1.0.0",
+    "description": "识别文本中的煽动性成分，并拆解其中的事实性断言逐条判定真伪。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.COUJXB.F9XC6K.0J6D",
+      "name": "煽动性识别 Partner",
+      "active": true,
+      "skills": [
+        {
+          "id": "speech.detect_incitement",
+          "name": "report_incitement",
+          "tags": [
+            "法律",
+            "言论分析",
+            "煽动性识别"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "判定文本是否构成煽动性言论，适用范围、强度与针对对象，并以结构化结论回传。evidence_spans 必须逐字摘录原文，不得改写或概括。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "facts.verify_claims",
+          "name": "report_claims",
+          "tags": [
+            "法律",
+            "事实核查"
+          ],
+          "version": "1.0.0",
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "拆解文本中的事实性断言并逐条判定真伪，给出整体为真程度（0..100）。纯情绪表达不必拆条，此时 claims 可为空并说明原因。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8443/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "识别文本中的煽动性成分，并拆解其中的事实性断言逐条判定真伪。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs mutual TLS identity"
+        }
+      },
+      "lastModifiedTime": "2026-09-27T17:17:53.142469+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0e222-b134-7750-9fc3-8442f659f832",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.COUJXB.F9XC6K.0J6D",
+    "acs_hash": "289895f8a1762c46a0ef3716ed5ad34a938730ae7ab2a22e4f3c9ade2b40f42e",
+    "acs_version": 2,
+    "acs_last_seq": 526,
+    "is_active": true,
+    "is_deleted": false,
+    "deleted_at": null,
+    "deleted_reason": null,
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-27T17:11:59.540547+08:00",
+    "updated_at": "2026-09-27T17:17:53.143030+08:00",
+    "submitted_at": "2026-09-27T17:12:00.144079+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-27T17:17:53.140085+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "煽动性言论识别 Partner（demo）",
+    "version": "1.0.0",
+    "description": "识别公开传播文本中的煽动性成分，并拆解其中的事实性断言逐条判定真伪。只对给定文本做分析与打分，不提供法律意见、不代理诉讼、不处理私人纠纷，也不对言论发布者作人格评价。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.YB1DAS.F56BVO.0QYM",
+      "name": "煽动性言论识别 Partner（demo）",
+      "active": false,
+      "skills": [
+        {
+          "id": "speech.detect_incitement",
+          "name": "report_incitement",
+          "tags": [
+            "法律",
+            "言论分析",
+            "煽动性识别"
+          ],
+          "version": "1.0.0",
+          "examples": [
+            "{\"text\": \"最近治安这么差，还不都是那些外地来的打工的闹的，他们都该滚出去。\"}",
+            "帮我判断这段话有没有煽动性：某某群体就不该出现在这个城市。"
+          ],
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "判定文本是否构成煽动性言论，给出适用范围、强度与针对对象，并以结构化结论回传。evidence_spans 必须逐字摘录原文，不得改写或概括。",
+          "outputModes": [
+            "application/json"
+          ]
+        },
+        {
+          "id": "facts.verify_claims",
+          "name": "report_claims",
+          "tags": [
+            "法律",
+            "事实核查"
+          ],
+          "version": "1.0.0",
+          "examples": [
+            "这段话里哪些是事实陈述、哪些是情绪表达？事实部分可信度如何？"
+          ],
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "拆解文本中的事实性断言并逐条判定真伪，给出整体为真程度（0..100）。纯情绪表达不必拆条，此时 claims 可为空并说明原因。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {},
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8443/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "entityMeta": {
+        "kind": "test-agent",
+        "note": "仅本项目自测使用，不对外提供服务。",
+        "purpose": "acps-demo-self-test",
+        "visibility": "private"
+      },
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "识别公开传播文本中的煽动性成分，并拆解其中的事实性断言逐条判定真伪。只对给定文本做分析与打分，不提供法律意见、不代理诉讼、不处理私人纠纷，也不对言论发布者作人格评价。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs 智能体间互信的双向 TLS 认证"
+        }
+      },
+      "lastModifiedTime": "2026-09-29T15:31:06.392401+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0cde0-1829-76b7-be2d-6d6ee54204e8",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.YB1DAS.F56BVO.0QYM",
+    "acs_hash": "aeed16a96804552c4affa50940ad9d8f6561f2f6e67c6386fd9f07ea05cb5154",
+    "acs_version": 3,
+    "acs_last_seq": 700,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-09-29T15:31:06.392352+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-23T18:46:50.665167+08:00",
+    "updated_at": "2026-09-29T15:31:06.393037+08:00",
+    "submitted_at": "2026-09-23T18:46:55.859628+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-23T18:54:38.844933+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "法律咨询主控（demo）",
+    "version": "1.0.0",
+    "description": "受理待研判文本，协调煽动性识别与社会危害评估两个专家 Partner，汇总输出最终研判结论。只做协调与汇总，不自行替代专家完成专项判定；结论仅供研究参考，不构成正式法律意见。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.8R0Y7E.IYKGM1.0X32",
+      "name": "法律咨询主控（demo）",
+      "active": false,
+      "skills": [
+        {
+          "id": "legal.issue_verdict",
+          "name": "submit_final_verdict",
+          "tags": [
+            "法律",
+            "结论输出",
+            "多智能体协同"
+          ],
+          "version": "1.0.0",
+          "examples": [
+            "{\"text\": \"最近治安这么差，还不都是那些外地来的打工的闹的。\"}",
+            "对这段文本给出完整的研判结论与危害分档。"
+          ],
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "出具法律咨询研判结论，汇总煽动严重度、真伪度与社会危害指数，并附反方视角。结论会写入 output/ 目录下的 JSON 文件。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {},
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8445/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "entityMeta": {
+        "kind": "test-agent",
+        "note": "仅本项目自测使用，不对外提供服务。",
+        "purpose": "acps-demo-self-test",
+        "visibility": "private"
+      },
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理待研判文本，协调煽动性识别与社会危害评估两个专家 Partner，汇总输出最终研判结论。只做协调与汇总，不自行替代专家完成专项判定；结论仅供研究参考，不构成正式法律意见。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs 智能体间互信的双向 TLS 认证"
+        }
+      },
+      "lastModifiedTime": "2026-09-29T15:31:09.675626+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0cddf-dc1b-72d9-9a30-734af24e2201",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.8R0Y7E.IYKGM1.0X32",
+    "acs_hash": "0c47f80f3e58d64427cdc80fcc499c106d720228eebc051b8b0a3310ed3ed71e",
+    "acs_version": 3,
+    "acs_last_seq": 701,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-09-29T15:31:09.675577+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-23T18:46:35.291466+08:00",
+    "updated_at": "2026-09-29T15:31:09.676261+08:00",
+    "submitted_at": "2026-09-23T18:46:54.541955+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-23T18:54:44.960280+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "社会危害性评估（demo）",
+    "version": "1.0.0",
+    "description": "(测试状态)对已识别的言论综合评估社会危害性，输出 -100..100 的综合指数与六维分解（公共秩序、国家安全、群体针对、现实风险、传播潜力、表达正当性）。只做量化评估，不替代司法认定，不处理非言论类诉求。",
+    "logo_url": null,
+    "acs": {
+      "aic": "1.2.156.3088.1.BUPT.81M3FX.B7G6IE.9D5VMV.1DZ8",
+      "name": "社会危害性评估（demo）",
+      "active": false,
+      "skills": [
+        {
+          "id": "harm.assess_social_impact",
+          "name": "assess_social_impact",
+          "tags": [
+            "法律",
+            "危害评估",
+            "社会治理"
+          ],
+          "version": "1.0.0",
+          "examples": [
+            "{\"text\": \"某群体都该滚出去，别让他们进厂。\", \"is_incitement\": true}",
+            "评估这段言论的社会危害程度，并给出分档结论。"
+          ],
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交社会危害性评估结论。harm_index 是 -100..100 的整数：正数表示该言论有问题、不应支持，负数表示正当、应予支持。band 字段可以留空，系统会按 harm_index 自动补全。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {},
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8444/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "entityMeta": {
+        "kind": "test-agent",
+        "note": "仅本项目自测使用，不对外提供服务。",
+        "purpose": "acps-demo-self-test",
+        "visibility": "private"
+      },
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "(测试状态)对已识别的言论综合评估社会危害性，输出 -100..100 的综合指数与六维分解（公共秩序、国家安全、群体针对、现实风险、传播潜力、表达正当性）。只做量化评估，不替代司法认定，不处理非言论类诉求。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs 智能体间互信的双向 TLS 认证"
+        }
+      },
+      "lastModifiedTime": "2026-09-29T15:31:14.368960+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0cddf-8f2f-72b6-87ee-2342b1760e72",
+    "aic": "1.2.156.3088.1.BUPT.81M3FX.B7G6IE.9D5VMV.1DZ8",
+    "acs_hash": "3bbb11d3e8a9b81aae3884cdd627fd85236458de21611c248751875e0e746856",
+    "acs_version": 3,
+    "acs_last_seq": 702,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-09-29T15:31:14.368912+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "APPROVED",
+    "created_by_ids": null,
+    "created_at": "2026-09-23T18:46:15.599266+08:00",
+    "updated_at": "2026-09-29T15:31:14.369422+08:00",
+    "submitted_at": "2026-09-23T18:46:18.092479+08:00",
+    "processed_by_id": "019f5ef6-3780-77f3-b41c-fc43fee965a0",
+    "processed_at": "2026-09-23T18:54:49.855712+08:00",
+    "process_comments": "自动审核通过（规则 registry-admission-2.0-static-format-llm-whole-acs）：Endpoint 或 Web URL 满足准入要求，且大模型公序良俗审核通过",
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "社会危害性评估 Partner(demo)",
+    "version": "1.0.0",
+    "description": "对已识别的言论综合评估社会危害性，输出 -100..100 的综合指数与六维分解（公共秩序、国家安全、群体针对、现实风险、传播潜力、表达正当性）。只做量化评估，不替代司法认定，不处理非言论类诉求。",
+    "logo_url": null,
+    "acs": {
+      "aic": null,
+      "name": "社会危害性评估 Partner(demo)",
+      "active": false,
+      "skills": [
+        {
+          "id": "harm.assess_social_impact",
+          "name": "assess_social_impact",
+          "tags": [
+            "法律",
+            "危害评估",
+            "社会治理"
+          ],
+          "version": "1.0.0",
+          "examples": [
+            "{\"text\": \"某群体都该滚出去，别让他们进厂。\", \"is_incitement\": true}",
+            "评估这段言论的社会危害程度，并给出分档结论。"
+          ],
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "提交社会危害性评估结论。harm_index 是 -100..100 的整数：正数表示该言论有问题、不应支持，负数表示正当、应予支持。band 字段可以留空，系统会按 harm_index 自动补全。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "department": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8444/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "entityMeta": {
+        "kind": "test-agent",
+        "note": "仅本项目自测使用，不对外提供服务。",
+        "purpose": "acps-demo-self-test",
+        "visibility": "private"
+      },
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "对已识别的言论综合评估社会危害性，输出 -100..100 的综合指数与六维分解（公共秩序、国家安全、群体针对、现实风险、传播潜力、表达正当性）。只做量化评估，不替代司法认定，不处理非言论类诉求。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs 智能体间互信的双向 TLS 认证"
+        }
+      },
+      "lastModifiedTime": "2026-09-23T18:45:00.367083+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": false,
+    "id": "01a0cdde-3074-7074-b889-59e221fbd4c6",
+    "aic": null,
+    "acs_hash": "a8dfcb5bc6e6d39670dd2f0ba8b05c4a1e08f0826277f168d0c2de26e97cb4cd",
+    "acs_version": 2,
+    "acs_last_seq": 418,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-09-23T18:45:00.366770+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "DRAFT",
+    "created_by_ids": null,
+    "created_at": "2026-09-23T18:44:45.812616+08:00",
+    "updated_at": "2026-09-23T18:45:00.367776+08:00",
+    "submitted_at": null,
+    "processed_by_id": null,
+    "processed_at": null,
+    "process_comments": null,
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  },
+  {
+    "name": "法律咨询主控(demo)",
+    "version": "1.0.0",
+    "description": "受理待研判文本，协调煽动性识别与社会危害评估两个专家 Partner，汇总输出最终研判结论。只做协调与汇总，不自行替代专家完成专项判定；结论仅供研究参考，不构成正式法律意见。",
+    "logo_url": null,
+    "acs": {
+      "aic": null,
+      "name": "法律咨询主控(demo)",
+      "active": false,
+      "skills": [
+        {
+          "id": "legal.issue_verdict",
+          "name": "submit_final_verdict",
+          "tags": [
+            "法律",
+            "结论输出",
+            "多智能体协同"
+          ],
+          "version": "1.0.0",
+          "examples": [
+            "{\"text\": \"最近治安这么差，还不都是那些外地来的打工的闹的。\"}",
+            "对这段文本给出完整的研判结论与危害分档。"
+          ],
+          "inputModes": [
+            "application/json"
+          ],
+          "description": "出具法律咨询研判结论，汇总煽动严重度、真伪度与社会危害指数，并附反方视角。结论会写入 output/ 目录下的 JSON 文件。",
+          "outputModes": [
+            "application/json"
+          ]
+        }
+      ],
+      "version": "1.0.0",
+      "provider": {
+        "name": "法律咨询多智能体课题组",
+        "department": "法律咨询多智能体课题组",
+        "countryCode": "CN",
+        "organization": "BUPT-LegalAgent-Demo"
+      },
+      "endPoints": [
+        {
+          "url": "https://150.109.154.16:8445/rpc",
+          "security": [
+            {
+              "mtls": []
+            }
+          ],
+          "transport": "JSONRPC"
+        }
+      ],
+      "entityMeta": {
+        "kind": "test-agent",
+        "note": "仅本项目自测使用，不对外提供服务。",
+        "purpose": "acps-demo-self-test",
+        "visibility": "private"
+      },
+      "certificate": {
+        "altNames": {
+          "ip": [
+            "150.109.154.16"
+          ]
+        },
+        "requestedValidity": 365
+      },
+      "description": "受理待研判文本，协调煽动性识别与社会危害评估两个专家 Partner，汇总输出最终研判结论。只做协调与汇总，不自行替代专家完成专项判定；结论仅供研究参考，不构成正式法律意见。",
+      "capabilities": {
+        "streaming": false,
+        "messageQueue": [],
+        "notification": false
+      },
+      "protocolVersion": "02.02",
+      "securitySchemes": {
+        "mtls": {
+          "type": "mutualTLS",
+          "description": "ACPs 智能体间互信的双向 TLS 认证"
+        }
+      },
+      "lastModifiedTime": "2026-09-23T18:45:23.707197+08:00",
+      "defaultInputModes": [
+        "application/json"
+      ],
+      "defaultOutputModes": [
+        "application/json"
+      ]
+    },
+    "is_ontology": true,
+    "id": "01a0cddd-bee9-7706-b65b-33c57ad5294c",
+    "aic": null,
+    "acs_hash": "b4f9197ee8baaec265fb5520bd29ed235221e95134b619c3d52328beeccae763",
+    "acs_version": 2,
+    "acs_last_seq": 419,
+    "is_active": false,
+    "is_deleted": true,
+    "deleted_at": "2026-09-23T18:45:23.707152+08:00",
+    "deleted_reason": "User deletion",
+    "is_disabled": false,
+    "disabled_at": null,
+    "disabled_reason": null,
+    "approval_status": "PENDING",
+    "created_by_ids": null,
+    "created_at": "2026-09-23T18:44:16.745266+08:00",
+    "updated_at": "2026-09-23T18:45:23.707512+08:00",
+    "submitted_at": "2026-09-23T18:44:22.574263+08:00",
+    "processed_by_id": null,
+    "processed_at": null,
+    "process_comments": null,
+    "vector_id": null,
+    "created_by": null,
+    "processed_by": null
+  }
+]
