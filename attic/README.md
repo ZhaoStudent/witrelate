@@ -26,6 +26,7 @@
 | `_probe_discover_migrated.py` | Discovery 迁移一次性探针 | 结论已进 `docs/`；路径保留在归档 |
 | `_probe_xmachine_ledger.py` | 跨机台账一次性探针 | 结论已进 `docs/`；路径保留在归档 |
 | `_tmp_latest.py` | 2026-10-21 查任务库的临时脚本 | 一次性 |
+| `WirAgent_test.py` | 早期 wit 教程的 `text-assistant` 示例 | 不是项目测试；文件名 `_test.py` 也不会被 pytest 收集 |
 
 > 上线手册里如果还写着“仓根 `_probe_*.py`”，请按
 > `attic/2026-10/` 的同名文件找；命令本身不变。

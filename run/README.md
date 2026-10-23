@@ -14,6 +14,31 @@
 | `probe_*.py` / `_probe_*.py` | 历史调查/一次性探针；结论已进 `docs/` | 只在复现旧结论时跑 |
 | `*_samples.py` / `diag_*.py` / `gen_*.py` | 样本生成、诊断、文档生成 | 按文件头 docstring 跑 |
 
+## 其他历史/一次性（11 个）
+
+这些不带 `e2e_` / `meta_verify_` / `probe_` 前缀，但确实存在；**不是生产入口**，
+按文件头 docstring 使用，不要再复制一份：
+
+| 脚本 | 性质 | 说明 |
+|---|---|---|
+| `batch_stance_swap.py` | 批量实验 | #124 立场对调，批量版；调用 e2e 机制 |
+| `check_meta_residue.py` | 元验证 | 元验证跑完后的残留核对 |
+| `rehearse_experience.py` | 诊断/演练 | 把演练场实际输出原样打印，供人工看内容 |
+| `remote_inbox_probe.py` | 探针 | 跨机部署后远端收件箱核对 |
+| `samples.py` | 样本 | 图像合成样本构造函数，被 probe/diag 复用 |
+| `verify_mcp_config.py` | 配置判据 | 本机 MCP 配置与 stdio 握手验证 |
+| `_append_gt_batch.py` | 一次性数据 | 批量追加人工 GT |
+| `_enrich_rulings.py` | 一次性数据 | 充实裁定经验库 |
+| `_matrix_video.py` | 一次性样本 | 视频 `duration_mismatch` 样本矩阵 |
+| `_relabel_staged_gt.py` | 一次性数据 | GT 重标 `c-staged-01` |
+| `_verify_domain_fix.py` | 一次性验证 | 真机验证「不实」值域修复 |
+
+## 台账口径
+
+`.wit/leader/runs.jsonl` **每条 run 有两行**：start（`status=null`）与 finish，
+两行共享同一个 `run_id`。按行数统计会翻倍；正确口径是
+`unique(run_id)` 或只数 finish 行。`aip_tasks` 是平台任务库，不能和它混算。
+
 ## 常用入口
 
 ```bash

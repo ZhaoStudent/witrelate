@@ -15,5 +15,6 @@
 | `_probe_discover_migrated.py` | Discovery 迁移一次性探针 |
 | `_probe_xmachine_ledger.py` | 跨机台账一次性探针 |
 | `_tmp_latest.py` | 2026-10-21 临时任务库查询 |
+| `WirAgent_test.py` | 早期 wit 教程示例（`text-assistant`）；**不是项目测试** |
 
 需要复用时，先移回 `run/` 或 `tools/`，不要直接从 `attic/` import。
