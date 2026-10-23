@@ -60,7 +60,7 @@ experience 8090（s1，进程内编排，不注册平台）
 | 运维工具 | `tools/` | 平台查询、指纹、指标、状态、清理 | 不是业务逻辑 |
 | 探针/元验证 | `run/` | e2e 真机探针、离线元验证、一次性调查、样本生成 | **不是生产入口** |
 | 启停脚本 | `scripts/` | `serve.sh`、`sync_s2.sh`、`verify.sh`、systemd 安装 | 与 systemd 二选一，不能同端口混跑 |
-| 部署单元 | `deploy/systemd/` | 每个角色一个 unit + timer + logrotate | 不在这里写业务 |
+| 部署单元 | `deploy/systemd/` | 每个角色一个 unit + timer + logrotate；体验应用有 `.service.example` 模板 | 不在这里写业务 |
 | 材料构建 | `docs/build/` | 技术方案/PPT/产品设计文档的构建与排版脚本 | **不是运行时**，不进同步清单 |
 | 事实与材料 | `docs/` | 基线、整改清单、上线手册、参赛材料 | 旧文档是带日期的快照 |
 | 归档 | `attic/` | 已完成使命的教程/一次性脚本 | 不被 import，不进同步清单 |
