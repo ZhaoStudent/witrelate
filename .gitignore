@@ -25,3 +25,7 @@ logs/
 
 # 运行时媒体核验记录（方案②落库产物，含用户主张原文，同 output/ 口径不进公库）
 legal_acps/facts/raw-evidence-live.jsonl
+
+# 技术方案构建中间件（Pandoc reference DOCX，可由 docs/build/build_technical_report.py 重建）
+docs/aicomp/_reference.docx
+docs/aicomp/_reference_styled.docx
