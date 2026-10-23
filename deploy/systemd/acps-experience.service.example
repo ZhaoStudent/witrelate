@@ -2,14 +2,14 @@
 #
 # 部署：
 #   1. 复制为 /etc/systemd/system/acps-experience.service
-#   2. 把 CHANGE_ME 换成真实口令（不要提交真实值）
-#   3. chmod 600 /etc/systemd/system/acps-experience.service
+#   2. 复制 acps-experience.env.example 为 /etc/acps-experience.env
+#   3. 把 CHANGE_ME 换成真实口令；chmod 600 /etc/acps-experience.env
 #   4. sudo systemctl daemon-reload && sudo systemctl enable --now acps-experience
 #
 # 说明：
 #   - 该服务只跑体验应用，不注册 ACPs、不产生平台访问记录；
 #   - 默认监听 0.0.0.0:8090；公网暴露时 EXP_ACCESS_KEY 必须设置；
-#   - 静态页面不设卡，/api/* 由 server.py 的口令中间件保护。
+#   - 口令放 EnvironmentFile，不写进 unit：`systemctl show` 不会读出文件内容。
 
 [Unit]
 Description=ACPs Experience - 反诈演练场 Web (DeepSeek-style console, :8090)
@@ -24,8 +24,8 @@ WorkingDirectory=/home/ubuntu/witrelate
 
 Environment=HOME=/home/ubuntu
 Environment=PYTHONUNBUFFERED=1
-# ⚠️ 必须替换；不要把真实口令写进仓库或材料
-Environment=EXP_ACCESS_KEY=CHANGE_ME
+# ⚠️ 真实口令放在 /etc/acps-experience.env（chmod 600），不写进 unit
+EnvironmentFile=/etc/acps-experience.env
 
 ExecStart=/home/ubuntu/witrelate/.venv/bin/python -u -m legal_acps.experience.server --host 0.0.0.0 --port 8090
 
