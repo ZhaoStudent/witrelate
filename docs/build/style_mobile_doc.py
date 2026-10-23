@@ -7,7 +7,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-PATH = Path("docs/product/隐藏牌与手机端设计.docx")
+ROOT = Path(__file__).resolve().parents[2]
+PATH = ROOT / "docs/product/隐藏牌与手机端设计.docx"
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 WIDTHS = {
     0: [3.2, 5.2, 4.8, 3.5],

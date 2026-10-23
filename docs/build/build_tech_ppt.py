@@ -12,7 +12,7 @@ from pptx.enum.text import MSO_ANCHOR, PP_ALIGN
 from pptx.util import Inches, Pt
 from pptx.oxml.ns import qn
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 AICOMP = ROOT / "docs" / "aicomp"
 OUT = AICOMP / "法前哨-答辩PPT.pptx"
 

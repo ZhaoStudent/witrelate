@@ -8,9 +8,10 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Pt, RGBColor
 
+ROOT = Path(__file__).resolve().parents[2]
 FILES = {
-    Path("docs/product/产品形态与界面设计.docx"): ("法前哨 · 产品形态与界面设计", "2026-10-22"),
-    Path("docs/product/隐藏牌与手机端设计.docx"): ("法前哨 · 隐藏牌与手机端设计 v2", "2026-10-22"),
+    ROOT / "docs/product/产品形态与界面设计.docx": ("法前哨 · 产品形态与界面设计", "2026-10-22"),
+    ROOT / "docs/product/隐藏牌与手机端设计.docx": ("法前哨 · 隐藏牌与手机端设计 v2", "2026-10-22"),
 }
 GRAY = RGBColor(0x8A, 0x99, 0xA8)
 

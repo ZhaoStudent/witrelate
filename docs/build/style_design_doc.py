@@ -7,7 +7,8 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-PATH = Path("docs/product/产品形态与界面设计.docx")
+ROOT = Path(__file__).resolve().parents[2]
+PATH = ROOT / "docs/product/产品形态与界面设计.docx"
 NAVY = RGBColor(0x12, 0x3B, 0x5D)
 WHITE = RGBColor(0xFF, 0xFF, 0xFF)
 

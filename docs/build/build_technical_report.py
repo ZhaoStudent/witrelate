@@ -16,7 +16,7 @@ from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 AICOMP = ROOT / "docs" / "aicomp"
 SRC_MD = AICOMP / "技术方案-法前哨.md"
 REF_RAW = AICOMP / "_reference.docx"
